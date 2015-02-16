@@ -18,8 +18,8 @@ buildscript {
 apply plugin: 'forge'
 
 version = "1.7.10-1.0"
-group= "com.abocalypse.construction-flower" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "construction-flower"
+group= "com.abocalypse.constructionFlower" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "constructionflower"
 
 minecraft {
     version = "1.7.10-10.13.2.1291"
