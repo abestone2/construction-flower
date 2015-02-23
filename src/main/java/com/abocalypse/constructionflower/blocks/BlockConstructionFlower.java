@@ -1,17 +1,22 @@
 package com.abocalypse.constructionflower.blocks;
 
+import java.util.EnumMap;
 import java.util.List;
+
+import com.abocalypse.constructionflower.constructionflower;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.client.renderer.texture.IIconRegister;
+// import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
+// import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.EnumPlantType;
@@ -19,6 +24,12 @@ import net.minecraftforge.common.IPlantable;
 
 public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 
+	public static enum PART {
+		STEM, SEPAL, FLOWER
+	}
+	
+	protected EnumMap<PART,IIcon> iconMap = new EnumMap<PART, IIcon>(PART.class);
+	
 	public BlockConstructionFlower() {
 		// It's not clear to me what depends on the argument to the
 		// BlockFlower constructor. Hope this works.
@@ -29,8 +40,13 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IIcon getIcon(int p_149691_1_, int p_149691_2_) {
+	public IIcon getIcon(int side, int meta) {
 		return this.blockIcon;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public IIcon getWorldIcon(PART part) {
+		return this.iconMap.get(part);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -38,7 +54,24 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 	public void registerBlockIcons (IIconRegister iconRegister)
 	{
 		this.blockIcon = iconRegister.registerIcon("constructionflower:constructionFlower");
+		
+		this.iconMap.put(PART.STEM, iconRegister.registerIcon("constructionflower:stem"));
+		this.iconMap.put(PART.SEPAL, iconRegister.registerIcon("constructionflower:sepal"));
+		this.iconMap.put(PART.FLOWER, iconRegister.registerIcon("constructionflower:flower"));
+
 	}
+	
+	@SideOnly(Side.CLIENT)
+	@Override
+	public int getRenderType() {
+		return constructionflower.constructionFlowerRenderId;
+	}
+	
+	@SideOnly(Side.CLIENT)
+    public int colorMultiplier(IBlockAccess world, int x, int y, int z)
+    {
+		return world.getBiomeGenForCoords(x, z).getBiomeGrassColor(x, y, z);
+    }
 	
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
