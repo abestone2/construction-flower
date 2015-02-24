@@ -20,14 +20,23 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 
 	private static double sepalHalfLength = 0.15D;
 	private static double sepalHalfWidth = 0.07D;
-	private static double sepalAngle = Math.PI/4D; // forty-five degrees
+	private static double sepalEastWestAngle = Math.PI/3D; // sixty degrees
+	private static double sepalNorthSouthAngle = 2D*Math.PI/9D; // forty degrees
 	
 	private static double sepalBottom = flowerBottom;
-	private static double sepalYDelta = sepalHalfLength*MathHelper.sin((float)sepalAngle);
-	private static double sepalYCenter = sepalBottom + sepalYDelta;
-	private static double sepalTop = sepalBottom + 2D*sepalYDelta;
-	private static double sepalCenterXZDelta = sepalHalfLength*MathHelper.cos((float)sepalAngle);
-	private static double sepalTopXZDelta = 2D*sepalHalfLength*MathHelper.cos((float)sepalAngle);
+
+	private static double sepalNorthSouthYDelta = sepalHalfLength*MathHelper.sin((float)sepalNorthSouthAngle);
+	private static double sepalNorthSouthYCenter = sepalBottom + sepalNorthSouthYDelta;
+	private static double sepalNorthSouthTop = sepalBottom + 2D*sepalNorthSouthYDelta;
+	private static double sepalNorthSouthCenterXZDelta = sepalHalfLength*MathHelper.cos((float)sepalNorthSouthAngle);
+	private static double sepalNorthSouthTopXZDelta = 2D*sepalHalfLength*MathHelper.cos((float)sepalNorthSouthAngle);
+
+	private static double sepalEastWestYDelta = sepalHalfLength*MathHelper.sin((float)sepalEastWestAngle);
+	private static double sepalEastWestYCenter = sepalBottom + sepalEastWestYDelta;
+	private static double sepalEastWestTop = sepalBottom + 2D*sepalEastWestYDelta;
+	private static double sepalEastWestCenterXZDelta = sepalHalfLength*MathHelper.cos((float)sepalEastWestAngle);
+	private static double sepalEastWestTopXZDelta = 2D*sepalHalfLength*MathHelper.cos((float)sepalEastWestAngle);
+
 	
 	@Override
 	public void renderInventoryBlock(Block block, int metadata, int modelId,
@@ -47,17 +56,19 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		double yBottom = (double)y;
 		double yTop = yBottom + 1.0D;
 		double ySepalBottom = yBottom + sepalBottom;
-		double ySepalCenter = yBottom + sepalYCenter;
-		double ySepalTop = yBottom + sepalTop;
+		double ySepalNorthSouthCenter = yBottom + sepalNorthSouthYCenter;
+		double ySepalNorthSouthTop = yBottom + sepalNorthSouthTop;
+		double ySepalEastWestCenter = yBottom + sepalEastWestYCenter;
+		double ySepalEastWestTop = yBottom + sepalEastWestTop;
 		double yFlowerBottom = yBottom + flowerBottom;
 		double yFlowerCenter = yFlowerBottom + flowerHalfDiagonal;
 		double yFlowerTop = yBottom + flowerTop;
 		
-		double zSouth = (double)z;
-		double zCenter = zSouth + 0.5D;
-		double zNorth = zSouth + 1.0D;
-		double zFlowerSouth = zCenter - flowerHalfDiagonal;
-		double zFlowerNorth = zCenter + flowerHalfDiagonal;
+		double zNorth = (double)z;
+		double zCenter = zNorth + 0.5D;
+		double zSouth = zNorth + 1.0D;
+		double zFlowerNorth = zCenter - flowerHalfDiagonal;
+		double zFlowerSouth = zCenter + flowerHalfDiagonal;
 		
 		// Draw the stem and sepals in the local grass color
 		int rgbLeafColorMultiplier = block.colorMultiplier(world, x, y, z); 
@@ -73,83 +84,83 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		double stemMinV = (double)stemIcon.getMinV();
 		double stemMaxV = (double)stemIcon.getMaxV();
 		
-		// the southwest-northeast part of the cross
-		tessellator.addVertexWithUV(xWest, yTop, zSouth, stemMinU, stemMinV);
-		tessellator.addVertexWithUV(xWest, yBottom, zSouth, stemMinU, stemMaxV);
-		tessellator.addVertexWithUV(xEast, yBottom, zNorth, stemMaxU, stemMaxV);
-		tessellator.addVertexWithUV(xEast, yTop, zNorth, stemMaxU, stemMinV);
-
-		// backwards to draw the other side
-		tessellator.addVertexWithUV(xEast, yTop, zNorth, stemMaxU, stemMinV);
-		tessellator.addVertexWithUV(xEast, yBottom, zNorth, stemMaxU, stemMaxV);
-		tessellator.addVertexWithUV(xWest, yBottom, zSouth, stemMinU, stemMaxV);
-		tessellator.addVertexWithUV(xWest, yTop, zSouth, stemMinU, stemMinV);
-		
 		// the northwest-southeast part of the cross
 		tessellator.addVertexWithUV(xWest, yTop, zNorth, stemMinU, stemMinV);
 		tessellator.addVertexWithUV(xWest, yBottom, zNorth, stemMinU, stemMaxV);
-		tessellator.addVertexWithUV(xEast, yBottom, zSouth, stemMaxU, stemMaxV);		
+		tessellator.addVertexWithUV(xEast, yBottom, zSouth, stemMaxU, stemMaxV);
 		tessellator.addVertexWithUV(xEast, yTop, zSouth, stemMaxU, stemMinV);
 
 		// backwards to draw the other side
 		tessellator.addVertexWithUV(xEast, yTop, zSouth, stemMaxU, stemMinV);
-		tessellator.addVertexWithUV(xEast, yBottom, zSouth, stemMaxU, stemMaxV);		
+		tessellator.addVertexWithUV(xEast, yBottom, zSouth, stemMaxU, stemMaxV);
 		tessellator.addVertexWithUV(xWest, yBottom, zNorth, stemMinU, stemMaxV);
 		tessellator.addVertexWithUV(xWest, yTop, zNorth, stemMinU, stemMinV);
+		
+		// the southwest-northeast part of the cross
+		tessellator.addVertexWithUV(xWest, yTop, zSouth, stemMinU, stemMinV);
+		tessellator.addVertexWithUV(xWest, yBottom, zSouth, stemMinU, stemMaxV);
+		tessellator.addVertexWithUV(xEast, yBottom, zNorth, stemMaxU, stemMaxV);		
+		tessellator.addVertexWithUV(xEast, yTop, zNorth, stemMaxU, stemMinV);
+
+		// backwards to draw the other side
+		tessellator.addVertexWithUV(xEast, yTop, zNorth, stemMaxU, stemMinV);
+		tessellator.addVertexWithUV(xEast, yBottom, zNorth, stemMaxU, stemMaxV);		
+		tessellator.addVertexWithUV(xWest, yBottom, zSouth, stemMinU, stemMaxV);
+		tessellator.addVertexWithUV(xWest, yTop, zSouth, stemMinU, stemMinV);
 		
 		// sepals
 		IIcon sepalIcon = ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PART.SEPAL);
 		double sepalMinU = (double)sepalIcon.getMinU();
-		double sepalMaxU = (double)sepalIcon.getInterpolatedU(1.0F);
+		double sepalMaxU = (double)sepalIcon.getInterpolatedU(2.0F);
 		double sepalMinV = (double)sepalIcon.getMinV();
-		double sepalMaxV = (double)sepalIcon.getInterpolatedV(1.0F);
+		double sepalMaxV = (double)sepalIcon.getInterpolatedV(2.0F);
 
 		// east sepal
-		// bottom corner, south corner, top corner, north corner
+		// bottom corner, north corner, top corner, south corner
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter + sepalCenterXZDelta, ySepalCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter + sepalTopXZDelta, ySepalTop, zCenter, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter + sepalCenterXZDelta, ySepalCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestTopXZDelta, ySepalEastWestTop, zCenter, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
 		//backwards to draw the other side
-		tessellator.addVertexWithUV(xCenter + sepalCenterXZDelta, ySepalCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter + sepalTopXZDelta, ySepalTop, zCenter, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter + sepalCenterXZDelta, ySepalCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
-
-		// north sepal
-		// bottom corner, west corner, top corner, east corner
-		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalCenter, zCenter  + sepalCenterXZDelta, sepalMaxU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter, ySepalTop, zCenter + sepalTopXZDelta, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalCenter, zCenter + sepalCenterXZDelta, sepalMinU, sepalMinV);
-		//backwards to draw the other side
-		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalCenter, zCenter + sepalCenterXZDelta, sepalMinU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter, ySepalTop, zCenter + sepalTopXZDelta, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalCenter, zCenter  + sepalCenterXZDelta, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestTopXZDelta, ySepalEastWestTop, zCenter, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
 
 		// south sepal
 		// bottom corner, west corner, top corner, east corner
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalCenter, zCenter - sepalCenterXZDelta, sepalMaxU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter, ySepalTop, zCenter - sepalTopXZDelta, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalCenter, zCenter - sepalCenterXZDelta, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalNorthSouthCenter, zCenter  + sepalNorthSouthCenterXZDelta, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter, ySepalNorthSouthTop, zCenter + sepalNorthSouthTopXZDelta, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalNorthSouthCenter, zCenter + sepalNorthSouthCenterXZDelta, sepalMinU, sepalMinV);
 		//backwards to draw the other side
-		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalCenter, zCenter - sepalCenterXZDelta, sepalMinU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter, ySepalTop, zCenter - sepalTopXZDelta, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalCenter, zCenter - sepalCenterXZDelta, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalNorthSouthCenter, zCenter + sepalNorthSouthCenterXZDelta, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter, ySepalNorthSouthTop, zCenter + sepalNorthSouthTopXZDelta, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalNorthSouthCenter, zCenter  + sepalNorthSouthCenterXZDelta, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
+
+		// north sepal
+		// bottom corner, west corner, top corner, east corner
+		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalNorthSouthCenter, zCenter - sepalNorthSouthCenterXZDelta, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter, ySepalNorthSouthTop, zCenter - sepalNorthSouthTopXZDelta, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalNorthSouthCenter, zCenter - sepalNorthSouthCenterXZDelta, sepalMinU, sepalMinV);
+		//backwards to draw the other side
+		tessellator.addVertexWithUV(xCenter + sepalHalfWidth, ySepalNorthSouthCenter, zCenter - sepalNorthSouthCenterXZDelta, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter, ySepalNorthSouthTop, zCenter - sepalNorthSouthTopXZDelta, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalHalfWidth, ySepalNorthSouthCenter, zCenter - sepalNorthSouthCenterXZDelta, sepalMaxU, sepalMaxV);
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
 
 		// west sepal
-		// bottom corner, south corner, top corner, north corner
+		// bottom corner, north corner, top corner, south corner
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter - sepalCenterXZDelta, ySepalCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
-		tessellator.addVertexWithUV(xCenter - sepalTopXZDelta, ySepalTop, zCenter, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter - sepalCenterXZDelta, ySepalCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestTopXZDelta, ySepalEastWestTop, zCenter, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
 		//backwards to draw the other side
-		tessellator.addVertexWithUV(xCenter - sepalCenterXZDelta, ySepalCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter - sepalTopXZDelta, ySepalTop, zCenter, sepalMaxU, sepalMinV);
-		tessellator.addVertexWithUV(xCenter - sepalCenterXZDelta, ySepalCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter + sepalHalfWidth, sepalMinU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestTopXZDelta, ySepalEastWestTop, zCenter, sepalMaxU, sepalMinV);
+		tessellator.addVertexWithUV(xCenter - sepalEastWestCenterXZDelta, ySepalEastWestCenter, zCenter - sepalHalfWidth, sepalMaxU, sepalMaxV);
 		tessellator.addVertexWithUV(xCenter, ySepalBottom, zCenter, sepalMinU, sepalMaxV);
 
 		
@@ -162,20 +173,20 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		double flowerMinV = (double)flowerIcon.getMinV();
 		double flowerMaxV = (double)flowerIcon.getMaxV();
 		// the sign faces East-West
-		// upper left corner of the icon is the south corner of the sign
-		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerSouth, flowerMinU, flowerMinV);
+		// upper left corner of the icon is the north corner of the sign
+		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerNorth, flowerMinU, flowerMinV);
 		// upper right corner of the icon is the top of the sign
 		tessellator.addVertexWithUV(xCenter, yFlowerTop, zCenter, flowerMaxU, flowerMinV);
-		// lower right corner of the icon is the north corner of the sign
-		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerNorth, flowerMaxU, flowerMaxV);
+		// lower right corner of the icon is the south corner of the sign
+		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerSouth, flowerMaxU, flowerMaxV);
 		// lower left corner of the icon is the bottom of the sign
 		tessellator.addVertexWithUV(xCenter, yFlowerBottom, zCenter, flowerMinU, flowerMaxV);		
 
 		// now backwards to draw the other side
 		tessellator.addVertexWithUV(xCenter, yFlowerBottom, zCenter, flowerMinU, flowerMaxV);		
-		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerNorth, flowerMaxU, flowerMaxV);
+		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerSouth, flowerMaxU, flowerMaxV);
 		tessellator.addVertexWithUV(xCenter, yFlowerTop, zCenter, flowerMaxU, flowerMinV);
-		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerSouth, flowerMinU, flowerMinV);
+		tessellator.addVertexWithUV(xCenter, yFlowerCenter, zFlowerNorth, flowerMinU, flowerMinV);
 		
 	}
 

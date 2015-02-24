@@ -5,6 +5,7 @@ import java.util.Random;
 
 import com.abocalypse.constructionflower.blocks.BlockConstructionFlower;
 import com.abocalypse.constructionflower.blocks.ModBlocks;
+import com.abocalypse.constructionflower.lib.ConfigHandler;
 
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -12,12 +13,12 @@ import cpw.mods.fml.common.IWorldGenerator;
 
 public class ConstructionFlowerWorldGen  implements IWorldGenerator {
 
-	private int chancesToSpawn;
-	private int inverseDensity;
+	private static int chancesToSpawn;
+	private static int percentSpawn;
 	
-	public ConstructionFlowerWorldGen(int chances, int invDen) {
-		this.chancesToSpawn = chances;
-		this.inverseDensity = invDen;
+	public ConstructionFlowerWorldGen() {
+		chancesToSpawn = ConfigHandler.getChancesToSpawn();
+		percentSpawn = ConfigHandler.getPercentSpawn();
 	}
 	
 	@Override
@@ -26,13 +27,13 @@ public class ConstructionFlowerWorldGen  implements IWorldGenerator {
 		
 		ArrayList<int[]> mappedBlocks = mappedBlocksForChunk(chunkX, chunkZ);
 		int nMappedBlocks = mappedBlocks.size();
-		int nChances = Math.min(this.chancesToSpawn, nMappedBlocks);
+		int nChances = Math.min(chancesToSpawn, nMappedBlocks);
 
 		for (int chance = 0; chance < nChances; chance++) {
 			
 			int[] xz = mappedBlocks.get(random.nextInt(nMappedBlocks));
 	
-			if (random.nextInt(this.inverseDensity) == 0) {
+			if (percentSpawn == 100 || random.nextInt(100) < percentSpawn) {
 
 				int y = world.getHeightValue(xz[0], xz[1]);
 				if (((BlockConstructionFlower)(ModBlocks.constructionFlower)).canBlockStay(world, xz[0], y, xz[1])) {
