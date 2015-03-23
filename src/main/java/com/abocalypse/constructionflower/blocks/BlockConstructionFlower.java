@@ -2,8 +2,10 @@ package com.abocalypse.constructionflower.blocks;
 
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Random;
 
-import com.abocalypse.constructionflower.constructionflower;
+import com.abocalypse.constructionflower.ConstructionFlower;
+import com.abocalypse.constructionflower.world.SpawnHandler;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -36,6 +38,7 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 		super(0);
 		this.setStepSound(Block.soundTypeGrass);
 		this.setCreativeTab(CreativeTabs.tabDecorations);
+		this.setTickRandomly(true);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -64,7 +67,7 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 	@SideOnly(Side.CLIENT)
 	@Override
 	public int getRenderType() {
-		return constructionflower.constructionFlowerRenderId;
+		return ConstructionFlower.constructionFlowerRenderId;
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -100,7 +103,7 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
     @Override
     public boolean canBlockStay(World world, int x, int y, int z)
     {
-        return (world.getFullBlockLightValue(x, y, z) >= 8 || world.canBlockSeeTheSky(x, y, z))
+    	return (world.getFullBlockLightValue(x, y, z) >= 8 || world.canBlockSeeTheSky(x, y, z))
                 && canThisPlantGrowOnThisBlock(world.getBlock(x, y - 1, z));
     }
     
@@ -112,10 +115,18 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
     
     private boolean canThisPlantGrowOnThisBlock(Block block)
     {
-    	return block.equals(Blocks.grass)
+    	return (block.equals(Blocks.grass)
     			|| block.equals(Blocks.dirt)
     			|| block.equals(Blocks.farmland)
-    			|| block.equals(Blocks.sand);
+    			|| block.equals(Blocks.sand));
     }
+    
+    
+    public void updateTick(World world, int x, int y, int z, Random random) {
+    	if ( !world.isRemote ) {
+    		SpawnHandler.spreadFromBlock(world, x, y, z, random);
+         }
+    }
+
     
 }
