@@ -15,11 +15,14 @@ import cpw.mods.fml.relauncher.Side;
 
 import com.abocalypse.constructionflower.blocks.ModBlocks;
 import com.abocalypse.constructionflower.command.LoadPlanCommand;
+import com.abocalypse.constructionflower.command.ManagePlansCommand;
 import com.abocalypse.constructionflower.event.EventListener;
 import com.abocalypse.constructionflower.lib.ConfigHandler;
 import com.abocalypse.constructionflower.lib.Constants;
-import com.abocalypse.constructionflower.network.AvailablePlanSpecsMessage;
+import com.abocalypse.constructionflower.network.OpenGuiLoadPlanMessage;
 import com.abocalypse.constructionflower.network.LoadPlanMessage;
+import com.abocalypse.constructionflower.network.LoadedPlansMessage;
+import com.abocalypse.constructionflower.network.SpawnedOntoBlocksMessage;
 import com.abocalypse.constructionflower.world.ConstructionFlowerWorldGen;
 
 @Mod(modid = Constants.MODID, name = Constants.MODNAME, version = Constants.VERSION)
@@ -55,8 +58,10 @@ public class ConstructionFlower {
     	
      	network = new SimpleNetworkWrapper(Constants.MODID + "_Channel");
      	network.registerMessage(LoadPlanMessage.Handler.class, LoadPlanMessage.class, 2, Side.SERVER);
-    	network.registerMessage(AvailablePlanSpecsMessage.Handler.class, AvailablePlanSpecsMessage.class, 4, Side.CLIENT);
- 
+    	network.registerMessage(OpenGuiLoadPlanMessage.Handler.class, OpenGuiLoadPlanMessage.class, 4, Side.CLIENT);
+    	network.registerMessage(LoadedPlansMessage.ClientHandler.class, LoadedPlansMessage.class, 6, Side.CLIENT);
+    	network.registerMessage(LoadedPlansMessage.ServerHandler.class, LoadedPlansMessage.class, 5, Side.SERVER);
+    	network.registerMessage(SpawnedOntoBlocksMessage.Handler.class, SpawnedOntoBlocksMessage.class, 7, Side.CLIENT);
     }
 
     @Mod.EventHandler
@@ -70,6 +75,7 @@ public class ConstructionFlower {
     public void serverLoad(FMLServerStartingEvent event)
     {
     	event.registerServerCommand(new LoadPlanCommand());
+    	event.registerServerCommand(new ManagePlansCommand());
     }
 
 

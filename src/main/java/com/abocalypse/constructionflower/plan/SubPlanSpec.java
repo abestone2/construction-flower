@@ -9,7 +9,7 @@ import org.json.simple.JSONObject;
 
 public class SubPlanSpec extends PlanPartSpec {
 
-		private static class PlanPartInfo {
+	private static class PlanPartInfo {
 		public final int deltaX;
 		public final int deltaZ;
 		public final PlanPartSpec spec;
@@ -54,7 +54,7 @@ public class SubPlanSpec extends PlanPartSpec {
 			ChunkPlanBlocks chunkPlanBlocks) throws IOException {
 
 		for ( PlanPartInfo part : parts ) {
-			part.spec.load(x(part.deltaX, part.deltaZ), z(part.deltaX, part.deltaZ), chunkPlanBlocks);
+			part.spec.load(x(part.deltaX, part.deltaZ), z(part.deltaX, part.deltaZ), this.rotatedOrientation, chunkPlanBlocks);
 		}
 		
 	}

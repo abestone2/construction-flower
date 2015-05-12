@@ -47,7 +47,7 @@ public class ImagePlanPartSpec extends PlanPartSpec {
 			// For now rejecting anything at all transparent (certainly don't want to
 			// be triggered by pixels that have no visible color in the image). Maybe
 			// this should be configurable.
-			return alpha == 0xFF && color == spreadColor;
+			return alpha == 0xFF && color == spreadColor; 
 		} catch (ArrayIndexOutOfBoundsException e) {
 			return false;
 		}
@@ -62,10 +62,11 @@ public class ImagePlanPartSpec extends PlanPartSpec {
 		//	eightBitImage.createGraphics().drawImage(partImage, 0, 0, null);
 		//	partImage = eightBitImage;
 		// }
-		for ( AnchoredChunk chunk : new AnchoredChunks(0, partImage.getWidth(), 0, partImage.getHeight()) ) {
+		for ( AnchoredChunk chunk : new AnchoredChunks(0, partImage.getWidth() - 1, 0, partImage.getHeight() - 1) ) {
 				for ( AnchoredBlock block : chunk ) {
 					if ( spawnBlock(block.deltaX, block.deltaZ) ) {
 						chunkPlanBlocks.addChunkBlock(chunk.coord, block.x, block.z, EnumConstructionFlowerLevel.SPAWN);
+						chunkPlanBlocks.addChunkBlock(chunk.coord, block.x, block.z, EnumConstructionFlowerLevel.SPREAD);
 					} else if ( spreadBlock( block.deltaX, block.deltaZ) ) {
 						chunkPlanBlocks.addChunkBlock(chunk.coord, block.x, block.z, EnumConstructionFlowerLevel.SPREAD);
 					}

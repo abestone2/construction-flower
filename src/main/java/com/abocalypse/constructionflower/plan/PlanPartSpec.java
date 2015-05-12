@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.abocalypse.constructionflower.util.EnumCycler;
+
 import net.minecraft.world.ChunkCoordIntPair;
 
 public abstract class PlanPartSpec {
@@ -13,11 +15,14 @@ public abstract class PlanPartSpec {
 		TOPNORTH, TOPEAST, TOPSOUTH, TOPWEST
 	}
 	
+	private static final EnumCycler<Orientation> rotator = new EnumCycler<Orientation>(Orientation.class);
+	
 	private int deltaXAnchor;
 	private int deltaZAnchor;
 	private Orientation orientation;
 	private int xShift;
 	private int zShift;
+	protected Orientation rotatedOrientation;
 	
 	public PlanPartSpec(Map<String, Object>properties) {
 		
@@ -27,9 +32,28 @@ public abstract class PlanPartSpec {
 
 	}
 	
-	private void anchorAt(int x, int z) {
+	@SuppressWarnings("incomplete-switch")
+	private void rotateOrientation(Orientation orientation) {
 		
-		switch (this.orientation) {
+		if ( this.orientation == Orientation.TOPNORTH ) {
+			this.rotatedOrientation = orientation;
+		} else {
+			rotator.advanceTo(orientation);
+			switch (this.orientation) {
+			case TOPWEST : rotator.advance();
+			case TOPSOUTH : rotator.advance();
+			case TOPEAST : rotator.advance();
+			}
+			this.rotatedOrientation = rotator.value();
+		}
+		
+	}
+	
+	private void anchorAt(int x, int z, Orientation orientation) {
+		
+		rotateOrientation(orientation);
+		
+		switch (this.rotatedOrientation) {
 		
 		case TOPNORTH : 
 			xShift = x - deltaXAnchor;
@@ -40,8 +64,8 @@ public abstract class PlanPartSpec {
 			zShift = z - deltaXAnchor;
 			break;
 		case TOPSOUTH :
-			xShift = z + deltaZAnchor;
-			zShift = x + deltaXAnchor + z;
+			xShift = x + deltaXAnchor;
+			zShift = z + deltaZAnchor;
 			break;
 		case TOPWEST :
 			xShift = x - deltaZAnchor;
@@ -53,10 +77,10 @@ public abstract class PlanPartSpec {
 
 	public int x(int deltaX, int deltaZ) {
 		int ret = 0;
-		switch (orientation) {
+		switch (rotatedOrientation) {
 		
 		case TOPNORTH :
-			ret = deltaX + xShift;
+			ret =  deltaX + xShift;
 			break;
 		case TOPEAST :
 			ret = -deltaZ + xShift;
@@ -65,7 +89,7 @@ public abstract class PlanPartSpec {
 			ret = -deltaX + xShift;
 			break;
 		case TOPWEST :
-			ret = deltaZ + xShift;
+			ret =  deltaZ + xShift;
 			break;
 			
 		}
@@ -74,13 +98,13 @@ public abstract class PlanPartSpec {
 
 	public int z(int deltaX, int deltaZ) {
 		int ret = 0;
-		switch (orientation) {
+		switch (rotatedOrientation) {
 		
 		case TOPNORTH :
-			ret = deltaZ + zShift;
+			ret =  deltaZ + zShift;
 			break;
 		case TOPEAST :
-			ret = deltaX  + zShift;
+			ret =  deltaX + zShift;
 			break;
 		case TOPSOUTH :
 			ret = -deltaZ + zShift;
@@ -98,10 +122,10 @@ public abstract class PlanPartSpec {
 		switch (orientation) {
 		
 		case TOPNORTH :
-			ret = x - xShift;
+			ret =  x - xShift;
 			break;
 		case TOPEAST :
-			ret = z  - zShift;
+			ret =  z - zShift;
 			break;
 		case TOPSOUTH :
 			ret = -x + xShift;
@@ -116,10 +140,10 @@ public abstract class PlanPartSpec {
 
 	public int deltaZ(int x, int z) {
 		int ret = 0;
-		switch (orientation) {
+		switch (rotatedOrientation) {
 		
 		case TOPNORTH :
-			ret = z - zShift;
+			ret =  z - zShift;
 			break;
 		case TOPEAST :
 			ret = -x + xShift;
@@ -128,7 +152,7 @@ public abstract class PlanPartSpec {
 			ret = -z + zShift;
 			break;
 		case TOPWEST :
-			ret = x - xShift;
+			ret =  x - xShift;
 			break;
 			
 		}
@@ -165,14 +189,14 @@ public abstract class PlanPartSpec {
 			xMin = chunk.chunkXPos << 4;
 			zMin = chunk.chunkZPos << 4;
 			
-			switch(orientation) {
+			switch(rotatedOrientation) {
 			
 			case TOPNORTH :
-				deltaXMin = xMin - xShift;
-				deltaZMin = zMin - zShift;
+				deltaXMin =  xMin - xShift;
+				deltaZMin =  zMin - zShift;
 				break;
 			case TOPEAST :
-				deltaXMin = zMin - zShift;
+				deltaXMin =  zMin - zShift;
 				deltaZMin = -xMin + xShift;
 				break;
 			case TOPSOUTH :
@@ -181,7 +205,7 @@ public abstract class PlanPartSpec {
 				break;
 			case TOPWEST :
 				deltaXMin = -zMin + zShift;
-				deltaZMin = xMin - xShift;
+				deltaZMin =  xMin - xShift;
 				break;
 			default : 
 				throw new IllegalArgumentException("Unknown orientation.");
@@ -193,7 +217,7 @@ public abstract class PlanPartSpec {
 			// based on https://stackoverflow.com/questions/371026/shortest-way-to-get-an-iterator-over-a-range-of-integers-in-java
 			return new Iterator<AnchoredBlock>() {
 
-				private int nextX = xMin;
+				private int nextX = xMin - 1;
 				private int nextZ = zMin;
 				private final int xMax = xMin + 16;
 				private final int zMax = zMin + 16;
@@ -212,7 +236,7 @@ public abstract class PlanPartSpec {
 					if (nextX == xMax) {
 						nextX = xMin;
 						nextZ++;
-						switch(orientation) {
+						switch(rotatedOrientation) {
 						case TOPNORTH:
 							nextDeltaX = deltaXMin;
 							nextDeltaZ++;
@@ -222,26 +246,26 @@ public abstract class PlanPartSpec {
 							nextDeltaZ = deltaZMin;
 							break;
 						case TOPSOUTH :
-							nextDeltaX--;
-							nextDeltaZ = deltaZMin;
-							break;
-						case TOPWEST :
 							nextDeltaX = deltaXMin;
 							nextDeltaZ--;
+							break;
+						case TOPWEST :
+							nextDeltaX--;
+							nextDeltaZ = deltaZMin;
 						} 
 					} else {
-						switch(orientation) {
+						switch(rotatedOrientation) {
 						case TOPNORTH :
 							nextDeltaX++;
 							break;
 						case TOPEAST :
-							nextDeltaZ++;
+							nextDeltaZ--;
 							break;
 						case TOPSOUTH :
 							nextDeltaX--;
 							break;
 						case TOPWEST :
-							nextDeltaZ--;
+							nextDeltaZ++;
 							break;
 						}
 					}
@@ -270,31 +294,31 @@ public abstract class PlanPartSpec {
 			int zMin;
 			int zMax;
 			
-			switch (orientation) {
+			switch (rotatedOrientation) {
 			
 			case TOPNORTH :
 				xMin = x(deltaXMin, deltaZMin);
 				xMax = x(deltaXMax, deltaZMin);
-				zMin = z(deltaZMin, deltaZMin);
-				zMax = z(deltaZMax, deltaZMax);
+				zMin = z(deltaXMin, deltaZMin);
+				zMax = z(deltaXMax, deltaZMax);
 				break;
 			case TOPEAST :
-				xMin = x(deltaXMin, -deltaZMax);
-				xMax = x(deltaXMax, -deltaZMin);
-				zMin = z(deltaXMin, -deltaZMax);
-				zMax = z(deltaXMax, -deltaZMin);
+				xMin = x(deltaXMin, deltaZMax);
+				xMax = x(deltaXMax, deltaZMin);
+				zMin = z(deltaXMin, deltaZMax);
+				zMax = z(deltaXMax, deltaZMin);
 				break;
 			case TOPSOUTH :
-				xMin = x(-deltaXMax, -deltaZMax);
-				xMax = x(-deltaXMin, -deltaZMin);
-				zMin = z(-deltaXMax, -deltaZMax);
-				zMax = z(-deltaXMin, -deltaZMax);
+				xMin = x(deltaXMax, deltaZMax);
+				xMax = x(deltaXMin, deltaZMin);
+				zMin = z(deltaXMax, deltaZMax);
+				zMax = z(deltaXMin, deltaZMin);
 				break;
 			case TOPWEST :
-				xMin = x(-deltaXMax, deltaZMin);
-				xMax = x(-deltaXMin, deltaZMax);
-				zMin = z(-deltaXMax, deltaZMin);
-				zMax = z(-deltaXMin, deltaZMax);
+				xMin = x(deltaXMax, deltaZMin);
+				xMax = x(deltaXMin, deltaZMax);
+				zMin = z(deltaXMax, deltaZMin);
+				zMax = z(deltaXMin, deltaZMax);
 				break;
 			default:
 				throw new IllegalArgumentException("Unknown orientation.");
@@ -308,11 +332,11 @@ public abstract class PlanPartSpec {
 		
 		public Iterator<AnchoredChunk> iterator() {
 			return new Iterator<AnchoredChunk>() {
-				private int nextChunkX = chunkXMin;
+				private int nextChunkX = chunkXMin - 1;
 				private int nextChunkZ = chunkZMin;
 				
 				public boolean hasNext() {
-					return nextChunkZ < chunkZMax - 1 || nextChunkX < chunkXMax - 1;
+					return nextChunkZ <= chunkZMax - 1 || nextChunkX < chunkXMax;
 				}
 				
 				public AnchoredChunk next() {
@@ -320,7 +344,7 @@ public abstract class PlanPartSpec {
 						throw new NoSuchElementException();
 					}
 					nextChunkX++;
-					if ( nextChunkX == chunkXMax ) {
+					if ( nextChunkX > chunkXMax ) {
 						nextChunkX = chunkXMin;
 						nextChunkZ++;
 					}
@@ -331,8 +355,8 @@ public abstract class PlanPartSpec {
 	}
 
 	
-	public void load(int worldX, int worldZ, ChunkPlanBlocks chunkPlanBlocks) {
-		anchorAt(worldX, worldZ);
+	public void load(int worldX, int worldZ, Orientation orientation, ChunkPlanBlocks chunkPlanBlocks) {
+		anchorAt(worldX, worldZ, orientation);
 		try {
 			doLoad(worldX, worldZ, chunkPlanBlocks);
 		} catch (IOException e) {

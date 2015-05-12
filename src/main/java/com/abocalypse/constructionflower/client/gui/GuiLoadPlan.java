@@ -1,15 +1,20 @@
 package com.abocalypse.constructionflower.client.gui;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.input.Keyboard;
 
 import com.abocalypse.constructionflower.ConstructionFlower;
 import com.abocalypse.constructionflower.network.LoadPlanMessage;
+import com.abocalypse.constructionflower.plan.BlockXZCoords;
 import com.abocalypse.constructionflower.plan.PlanPartSpec;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
-import com.abocalypse.constructionflower.util.CyclicalEnum;
+import com.abocalypse.constructionflower.util.ArrayCycler;
+import com.abocalypse.constructionflower.util.EnumCycler;
 
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -21,102 +26,91 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.world.World;
 
 @SideOnly(Side.CLIENT)
-public class GuiSelectPlan extends GuiScreen {
+public class GuiLoadPlan extends GuiScreen {
 	
 	private GuiScreen parentScreen;
 	private boolean initial;
-	private int planSelected;
-	private List<String> availablePlans;
+	private int planSpecSelected;
+	private List<String> availablePlanSpecs;
+	private Map<String, BlockXZCoords> existingPlans;
 	
 	private final String doneText;
 	private final String noSelectionCancelText;
 	private final String selectionCancelText;
 	private static final String cancelWorldText = "Cancel World Creation";
 	
-	private static final EnumMap<PlanPartSpec.Orientation, String> orientationText;
-	static {
-		orientationText = new EnumMap<PlanPartSpec.Orientation, String>(PlanPartSpec.Orientation.class);
-		orientationText.put(PlanPartSpec.Orientation.TOPNORTH, "Top of Plan is North");
-		orientationText.put(PlanPartSpec.Orientation.TOPEAST, "Top of Plan is East");
-		orientationText.put(PlanPartSpec.Orientation.TOPSOUTH, "Top of Plan is South");
-		orientationText.put(PlanPartSpec.Orientation.TOPWEST, "Top of Plan is West");
-	}
-	
-	private static final EnumMap<WorldPlanRegistry.AnchorMode, String> anchorModeText;
-	static {
-		anchorModeText= new EnumMap<WorldPlanRegistry.AnchorMode, String>(WorldPlanRegistry.AnchorMode.class);
-		anchorModeText.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_ORIGIN, "Relative to Origin");
-		anchorModeText.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_SPAWN, "Relative to Spawn Point");
-	}
-
-	private PlanList selectPlanSpec;
+	private PlanSpecList selectPlanSpec;
+	private boolean relativeToPlanAllowed;
+	private String planSelected;
 	private GuiTextField xAnchorField;
 	private GuiTextField zAnchorField;
-	private CyclicalEnum<PlanPartSpec.Orientation> orientation;
-	private CyclicalEnum<WorldPlanRegistry.AnchorMode> anchorMode;
+	private GuiTextField xAnchorRelativeToField;
+	private GuiTextField zAnchorRelativeToField;
+	private EnumCycler<PlanPartSpec.Orientation> orientation;
+	private EnumCycler<WorldPlanRegistry.AnchorMode> anchorMode;
+	private EnumSet<WorldPlanRegistry.AnchorMode> skipAnchorModes;
+	private ArrayCycler<String> existingPlansCycler;
 	private GuiTextField planNameField;
 	
 	private static enum ButtonID {
-		CANCEL, DONE, CANCEL_WORLD, ORIENTATION, ANCHOR_MODE, SCROLL_UP, SCROLL_DOWN
+		CANCEL, DONE, CANCEL_WORLD, ORIENTATION, ANCHOR_MODE, RELATIVE_TO_PLAN, SCROLL_UP, SCROLL_DOWN
 	}
 	
 	private EnumMap<ButtonID, GuiButton> buttons;
 	
 	@SideOnly(Side.CLIENT)
-	class PlanList extends GuiSlot {
+	class PlanSpecList extends GuiSlot {
 
-		public PlanList(int bottom) {
-			super(GuiSelectPlan.this.mc, GuiSelectPlan.this.width - 2*GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, bottom - 2*GuiConstants.VERTICAL_GUTTER, GuiConstants.VERTICAL_GUTTER, bottom, GuiConstants.SLOT_HEIGHT);
+		public PlanSpecList(int bottom) {
+			super(GuiLoadPlan.this.mc, GuiLoadPlan.this.width - 2*GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH - GuiConstants.SCROLL_BAR_WIDTH, bottom - 2*GuiConstants.VERTICAL_GUTTER, GuiConstants.VERTICAL_GUTTER, bottom, GuiConstants.SLOT_HEIGHT);
 		}
 
 		@Override
 		protected int getSize() {
-			return availablePlans.size();
+			return availablePlanSpecs.size();
 		}
 
 		@Override
 		// Not clear what the last two arguments are supposed to be for
 		protected void elementClicked(int slotClicked, boolean doubleClicked,
 				int p_148144_3_, int p_148144_4_) {
-			GuiSelectPlan.this.planSelected = slotClicked;
-			boolean validPlan = GuiSelectPlan.this.planSelected >= 0 && GuiSelectPlan.this.planSelected < this.getSize();
-			GuiSelectPlan.this.buttons.get(ButtonID.DONE).enabled = validPlan;
-			GuiSelectPlan.this.buttons.get(ButtonID.ORIENTATION).enabled = validPlan;
-			GuiSelectPlan.this.buttons.get(ButtonID.ANCHOR_MODE).enabled = validPlan;
-			GuiSelectPlan.this.setButtonTexts();
+			GuiLoadPlan.this.planSpecSelected = slotClicked;
+			boolean validPlan = GuiLoadPlan.this.planSpecSelected >= 0 && GuiLoadPlan.this.planSpecSelected < this.getSize();
+			GuiLoadPlan.this.buttons.get(ButtonID.DONE).enabled = validPlan;
+			GuiLoadPlan.this.buttons.get(ButtonID.ORIENTATION).enabled = validPlan;
+			GuiLoadPlan.this.buttons.get(ButtonID.ANCHOR_MODE).enabled = validPlan;
+			GuiLoadPlan.this.setButtonTexts();
 		}
 
 		@Override
 		protected boolean isSelected(int slot) {
-			return slot == GuiSelectPlan.this.planSelected;
+			return slot == GuiLoadPlan.this.planSpecSelected;
 		}
 
 		@Override
 		protected void drawBackground() {
-			GuiSelectPlan.this.drawDefaultBackground();
+			GuiLoadPlan.this.drawDefaultBackground();
 		}
 
 		@Override
 		// Not clear what the last four arguments are supposed to be for.
 		protected void drawSlot(int slot, int x, int y, int p_148126_4_, Tessellator p_148126_5_, int p_148126_6_, int p_148126_7_) {
-            GuiSelectPlan.this.drawString(GuiSelectPlan.this.fontRendererObj, GuiSelectPlan.this.availablePlans.get(slot), x + 2, y + 1, 0xFFFFFF);
+            GuiLoadPlan.this.drawString(GuiLoadPlan.this.fontRendererObj, GuiLoadPlan.this.availablePlanSpecs.get(slot), x + 2, y + 1, 0xFFFFFF);
 		}
 		
 	}
 	
-	// the first argument says whether this is an initial plan load (during world
-	// creation) or not
-	// the second is the usual parent screen that every GuiScreen takes
-	// the third is the world we are loading a plan into; for initial loads this
-	//  will be null (or whatever, it won't be used)
-	public GuiSelectPlan(GuiScreen screen, World world, List<String> planSpecFiles) {
+	// the first arg is the usual parent screen that every GuiScreen takes
+	// the second tells whether we are loading an initial plan or loading
+	//  a new plan in-game
+	public GuiLoadPlan(GuiScreen screen, boolean initial, List<String> planSpecFiles, Map<String, BlockXZCoords> existingPlans) {
 		this.parentScreen = screen;
-		this.initial = world == null;
-		this.availablePlans = planSpecFiles;
-		this.planSelected = -1;
+		this.initial = initial;
+		this.availablePlanSpecs = planSpecFiles;
+		this.existingPlans = existingPlans;
+		this.planSpecSelected = -1;
 		if ( initial ) {
 			this.doneText = "Create With Selected Plan";
 			this.noSelectionCancelText = "Continue With No Plan";
@@ -140,10 +134,10 @@ public class GuiSelectPlan extends GuiScreen {
 		//  a remote server, has transmitted a list of plan specs stored remotely; in that
 		//  case this.availablePlans was already loaded up in the constructor)
 		if ( initial ) {
-			this.availablePlans = WorldPlanRegistry.getAvailablePlans();
+			this.availablePlanSpecs = WorldPlanRegistry.getAvailablePlans();
 		}
 		
-		if ( availablePlans.size() == 0 ) {
+		if ( availablePlanSpecs.size() == 0 ) {
 			if ( initial ) {
 				this.mc.displayGuiScreen(parentScreen);
 			} else {
@@ -162,36 +156,62 @@ public class GuiSelectPlan extends GuiScreen {
 		}
 		y = addButtonRow(ButtonID.CANCEL, "", ButtonID.DONE, doneText, y);
 		buttons.get(ButtonID.DONE).enabled = false;
-		
+
 		int yDown = GuiConstants.VERTICAL_GUTTER;
 		int textFieldWidth = (GuiConstants.BUTTON_WIDTH - GuiConstants.HORIZONTAL_GUTTER)/2;
 		this.xAnchorField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
 		this.zAnchorField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - textFieldWidth, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
 		this.xAnchorField.setText("0");
 		this.zAnchorField.setText("0");
-		yDown += GuiConstants.TEXT_FIELD_HEIGHT;
-		this.anchorMode = new CyclicalEnum<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
+		yDown += GuiConstants.TEXT_FIELD_HEIGHT + GuiConstants.VERTICAL_GUTTER;
+		this.anchorMode = new EnumCycler<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
+		if ( initial ) {
+			this.skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN, WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION);
+			this.relativeToPlanAllowed = false;
+		} else if ( this.existingPlans.size() == 0 ) {
+			this.skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN);
+			this.relativeToPlanAllowed = false;
+		} else {
+			this.relativeToPlanAllowed = true;
+		}
 		yDown = addSideButton(ButtonID.ANCHOR_MODE, "", yDown);
 		buttons.get(ButtonID.ANCHOR_MODE).enabled = false;
-		this.orientation = new CyclicalEnum<PlanPartSpec.Orientation>(PlanPartSpec.Orientation.class);
+		yDown += GuiConstants.VERTICAL_GUTTER;
+		this.xAnchorRelativeToField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		this.zAnchorRelativeToField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - textFieldWidth, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		this.xAnchorRelativeToField.setText("0");
+		this.zAnchorRelativeToField.setText("0");
+		if ( this.relativeToPlanAllowed ) {
+			this.existingPlansCycler = new ArrayCycler<String>(new ArrayList<String>(this.existingPlans.keySet()));
+			addSideButton(ButtonID.RELATIVE_TO_PLAN, "", yDown);
+			buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = false;
+			buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
+		} else {
+			this.planSelected = null;
+		}
+		yDown += GuiConstants.VERTICAL_GUTTER + GuiConstants.TEXT_FIELD_HEIGHT;
+		this.orientation = new EnumCycler<PlanPartSpec.Orientation>(PlanPartSpec.Orientation.class);
 		yDown = addSideButton(ButtonID.ORIENTATION, "", yDown);
 		buttons.get(ButtonID.ORIENTATION).enabled = false;
 		if ( !initial ) {
+			yDown += GuiConstants.VERTICAL_GUTTER;
 			this.planNameField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, GuiConstants.BUTTON_WIDTH, GuiConstants.TEXT_FIELD_HEIGHT);
 			this.planNameField.setText("New Plan");
 			yDown += GuiConstants.TEXT_FIELD_HEIGHT;
 		}
-		selectPlanSpec = new PlanList(y);
-		// Not sure which is actually up and which is down.
-		selectPlanSpec.registerScrollButtons(ButtonID.SCROLL_UP.ordinal(), ButtonID.SCROLL_DOWN.ordinal());
+		this.selectPlanSpec = new PlanSpecList(y);
+		this.selectPlanSpec.registerScrollButtons(ButtonID.SCROLL_UP.ordinal(), ButtonID.SCROLL_DOWN.ordinal());
 		
 		setButtonTexts();
 	}
 	
 	private void setButtonTexts() {
-		buttons.get(ButtonID.ANCHOR_MODE).displayString = anchorModeText.get(anchorMode.value());
-		buttons.get(ButtonID.ORIENTATION).displayString = orientationText.get(orientation.value());
-		if ( planSelected >= 0 ) {
+		buttons.get(ButtonID.ANCHOR_MODE).displayString = GuiConstants.ANCHOR_MODE_TEXT.get(anchorMode.value());
+		buttons.get(ButtonID.ORIENTATION).displayString = GuiConstants.ORIENTATION_TEXT.get(orientation.value());
+		if ( this.relativeToPlanAllowed ) {
+			buttons.get(ButtonID.RELATIVE_TO_PLAN).displayString = existingPlansCycler.value();
+		}
+		if ( planSpecSelected >= 0 ) {
 			buttons.get(ButtonID.CANCEL).displayString = selectionCancelText;
 		} else {
 			buttons.get(ButtonID.CANCEL).displayString = noSelectionCancelText;
@@ -229,20 +249,66 @@ public class GuiSelectPlan extends GuiScreen {
 				} catch (NumberFormatException e) {
 					zAnchor = 0;
 				}
+				
+				BlockXZCoords anchor = new BlockXZCoords(xAnchor, zAnchor);
+				BlockXZCoords anchorRelativeTo;
+				switch (anchorMode.value()) {
+				case RELATIVE_TO_ORIGIN :
+					anchorRelativeTo = BlockXZCoords.origin();
+					break;
+				case RELATIVE_TO_SPAWN :
+					if ( initial ) {
+						anchorRelativeTo = BlockXZCoords.origin();
+					} else {
+						anchorRelativeTo = new BlockXZCoords(this.mc.thePlayer.worldObj.getSpawnPoint());
+					}
+					break;
+				case RELATIVE_TO_POSITION :
+					anchorRelativeTo = new BlockXZCoords(this.mc.thePlayer);
+					break;
+				case RELATIVE_TO_PLAN :
+					this.planSelected = existingPlansCycler.value();
+					anchorRelativeTo = existingPlans.get(this.planSelected);
+					break;
+				case RELATIVE_TO_COORDS :
+					int xAnchorRelativeTo;
+					try {
+						xAnchorRelativeTo = Integer.parseInt(xAnchorRelativeToField.getText());
+					} catch (NumberFormatException e) {
+						xAnchorRelativeTo = 0;
+					}
+					int zAnchorRelativeTo;
+					try {
+						zAnchorRelativeTo = Integer.parseInt(zAnchorRelativeToField.getText());
+					} catch (NumberFormatException e) {
+						zAnchorRelativeTo = 0;
+					}
+					anchorRelativeTo = new BlockXZCoords(xAnchorRelativeTo, zAnchorRelativeTo);
+					break;
+				default :
+					throw new RuntimeException("Unknown anchor mode");
+				}
+				anchor.add(anchorRelativeTo);
+				
+				WorldPlanRegistry.AnchorMode anchorModeToStore = ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION ) ? WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS : anchorMode.value();
+				
+				WorldPlanRegistry.PlanPosition position = new WorldPlanRegistry.PlanPosition(anchor, anchorModeToStore, anchorRelativeTo, this.planSelected, orientation.value());
+				
 				if ( initial ) {
 
 					String levelName = ReflectionHelper.getPrivateValue(GuiCreateWorld.class, (GuiCreateWorld)parentScreen, "field_146336_i");
-					WorldPlanRegistry.initialPlan(levelName, xAnchor, zAnchor, anchorMode.value(), orientation.value(), availablePlans.get(planSelected));
+					WorldPlanRegistry.initialPlan(levelName, position, availablePlanSpecs.get(planSpecSelected));
 					((GuiCreateConstructionFlowerWorld)parentScreen).continueCreatingWorld();
 
 				} else {
 					
 					String planName = planNameField.getText();
-					ConstructionFlower.instance.network.sendToServer(new LoadPlanMessage(xAnchor, zAnchor, anchorMode.value(), orientation.value(), planName, availablePlans.get(planSelected)));
+					ConstructionFlower.instance.network.sendToServer(new LoadPlanMessage(position, planName, availablePlanSpecs.get(planSpecSelected)));
 					this.mc.displayGuiScreen((GuiScreen)null);
 
 				}
 				break;
+				
 			case CANCEL_WORLD :
 				if ( initial ) {
 					((GuiCreateConstructionFlowerWorld)parentScreen).cancelCreatingWorld();
@@ -253,7 +319,20 @@ public class GuiSelectPlan extends GuiScreen {
 				setButtonTexts();
 				break;
 			case ANCHOR_MODE :
-				anchorMode.advance();
+				anchorMode.advanceToNot(this.skipAnchorModes);
+				if ( this.relativeToPlanAllowed ) {
+					if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN ) {
+						buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = true;
+						buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = true;
+					} else {
+						buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = false;
+						buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
+					}
+				}
+				setButtonTexts();
+				break;
+			case RELATIVE_TO_PLAN :
+				existingPlansCycler.advance();
 				setButtonTexts();
 				break;
 			default : 
@@ -271,7 +350,13 @@ public class GuiSelectPlan extends GuiScreen {
 		this.selectPlanSpec.drawScreen(p_73863_1_, p_73863_2_, p_73863_3_);
 		this.xAnchorField.drawTextBox();
 		this.zAnchorField.drawTextBox();
-		this.planNameField.drawTextBox();
+		if ( !initial ) {
+			this.planNameField.drawTextBox();
+		}
+		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+				this.xAnchorRelativeToField.drawTextBox();
+				this.zAnchorRelativeToField.drawTextBox();
+		}
 		super.drawScreen(p_73863_1_, p_73863_2_, p_73863_3_);
 	}
 	
@@ -280,7 +365,13 @@ public class GuiSelectPlan extends GuiScreen {
 		super.updateScreen();
 		this.xAnchorField.updateCursorCounter();
 		this.zAnchorField.updateCursorCounter();
-		this.planNameField.updateCursorCounter();
+		if ( !initial ) {
+			this.planNameField.updateCursorCounter();
+		}
+		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+			this.xAnchorRelativeToField.updateCursorCounter();
+			this.zAnchorRelativeToField.updateCursorCounter();
+		}
 	}
 	
 	@Override
@@ -291,8 +382,16 @@ public class GuiSelectPlan extends GuiScreen {
         if ( this.zAnchorField.isFocused() ) {
             this.zAnchorField.textboxKeyTyped(par1, par2);
         }
-        if ( this.planNameField.isFocused() ) {
+        if ( !initial && this.planNameField.isFocused() ) {
         	this.planNameField.textboxKeyTyped(par1,  par2);
+        }
+        if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+        	if ( this.xAnchorRelativeToField.isFocused() ) {
+        		this.xAnchorRelativeToField.textboxKeyTyped(par1, par2);
+        	}
+        	if ( this.zAnchorRelativeToField.isFocused() ) {
+        		this.zAnchorRelativeToField.textboxKeyTyped(par1, par2);
+        	}
         }
     }
 	
@@ -301,7 +400,13 @@ public class GuiSelectPlan extends GuiScreen {
 		super.mouseClicked(x, y, buttonClicked);
 		this.xAnchorField.mouseClicked(x, y, buttonClicked);
 		this.zAnchorField.mouseClicked(x, y, buttonClicked);
-		this.planNameField.mouseClicked(x, y, buttonClicked);
+		if ( !initial ) {
+			this.planNameField.mouseClicked(x, y, buttonClicked);
+		}
+		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+			this.xAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
+			this.zAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

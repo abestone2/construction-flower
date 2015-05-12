@@ -1,28 +1,25 @@
 package com.abocalypse.constructionflower.command;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.abocalypse.constructionflower.ConstructionFlower;
-import com.abocalypse.constructionflower.network.OpenGuiLoadPlanMessage;
-import com.abocalypse.constructionflower.plan.BlockXZCoords;
+import com.abocalypse.constructionflower.network.LoadedPlansMessage;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-public class LoadPlanCommand implements ICommand {
+public class ManagePlansCommand implements ICommand {
 
 	private static ArrayList<String> aliases = new ArrayList<String>();
 	static
 	{
-		aliases.add("cfloadplan");
-		aliases.add("cfload");
+		aliases.add("cfmanageplans");
+		aliases.add("cfmanage");
 	}
-	
+
 	@Override
 	public int compareTo(Object o) {
 		// TODO Auto-generated method stub
@@ -47,16 +44,9 @@ public class LoadPlanCommand implements ICommand {
 
 	@Override
 	public void processCommand(ICommandSender sender, String[] args) {
-		if ( sender instanceof EntityPlayerMP ) {
-			List<String> planSpecFiles = WorldPlanRegistry.getAvailablePlans();
-			Map<String, BlockXZCoords> existingPlans = new HashMap<String, BlockXZCoords>();
-			WorldPlanRegistry registry = WorldPlanRegistry.get(((EntityPlayerMP)sender).worldObj);
-			Map<String, WorldPlanRegistry.PlanInfo> loadedPlans = registry.loadedPlans();
-			for ( Map.Entry<String, WorldPlanRegistry.PlanInfo> entry : loadedPlans.entrySet() ) {
-				existingPlans.put(entry.getKey(), entry.getValue().position.anchor);
-			}
-			ConstructionFlower.instance.network.sendTo(new OpenGuiLoadPlanMessage(planSpecFiles, existingPlans), (EntityPlayerMP)sender);
-		}
+		EntityPlayerMP player = (EntityPlayerMP)sender;
+		WorldPlanRegistry registry = WorldPlanRegistry.get(player.worldObj);
+		ConstructionFlower.instance.network.sendTo(new LoadedPlansMessage(registry.loadedPlans()), player);
 	}
 
 	@Override

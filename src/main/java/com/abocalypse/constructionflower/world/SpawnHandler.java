@@ -10,21 +10,27 @@ import com.abocalypse.constructionflower.plan.ChunkBlocks.BlockMember;
 import com.abocalypse.constructionflower.plan.EnumConstructionFlowerLevel;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 
+import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
 public class SpawnHandler {
-		
+	
 	public static void spawnOntoChunk(World world, ChunkCoordIntPair chunk, Random random) {
 
-		// these checks shouldn't be necessary because only called from contexts where the
+		spawnOntoPlanChunk(world, chunk, random, null, null);
+
+	}
+	
+	public static void spawnOntoPlanChunk(World world, ChunkCoordIntPair chunk, Random random, String planName, List<ChunkCoordinates> spawnedOnto) {
+		// this check shouldn't be necessary because only called from contexts where the
 		// check has already happened?
 		if ( !world.isRemote) {
 			
 			WorldPlanRegistry registry = WorldPlanRegistry.get(world);
 			if (registry.initialized()) {
 
-				if (registry.containsChunk(chunk,
+				if (registry.containsChunk(planName, chunk,
 						EnumConstructionFlowerLevel.SPAWN)) {
 
 					List<BlockMember> randomBlocks = WorldPlanRegistry.get(world).randomSpawnBlocksFromChunk(chunk, ConfigHandler.chancesToSpawn, random);
@@ -37,6 +43,9 @@ public class SpawnHandler {
 							int y = world.getHeightValue(block.x(), block.z());
 							if (((BlockConstructionFlower) (ModBlocks.constructionFlower)).canPlaceBlockAt(world, block.x(), y, block.z())) {
 								world.setBlock(block.x(), y, block.z(), ModBlocks.constructionFlower, 0, 0);
+								if ( spawnedOnto != null ) {
+									spawnedOnto.add(new ChunkCoordinates(block.x(), y, block.z()));
+								}
 							}
 
 						}

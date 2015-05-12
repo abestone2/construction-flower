@@ -30,7 +30,7 @@ public class GuiCreateConstructionFlowerWorld extends GuiCreateWorld {
 	public void actionPerformed(GuiButton button) {
 		if ( button.id == 0 && !haveShownLoadPlan ) {
 			createWorldButton = button; // keep track of this
-			mc.displayGuiScreen(new GuiSelectPlan(this, null, null));
+			mc.displayGuiScreen(new GuiLoadPlan(this, true, null, null));
 		} else {
 			super.actionPerformed(button);
 		}

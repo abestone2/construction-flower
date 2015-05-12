@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.abocalypse.constructionflower.ConstructionFlower;
+import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 import com.abocalypse.constructionflower.world.SpawnHandler;
 
 import cpw.mods.fml.relauncher.Side;
@@ -124,7 +125,12 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
     
     public void updateTick(World world, int x, int y, int z, Random random) {
     	if ( !world.isRemote ) {
-    		SpawnHandler.spreadFromBlock(world, x, y, z, random);
+    		WorldPlanRegistry registry = WorldPlanRegistry.get(world);
+    		if ( !registry.containsBlock(x, z) ) {
+    			world.setBlock(x, y, z, Blocks.air);
+    		} else {
+    			SpawnHandler.spreadFromBlock(world, x, y, z, random);
+    		}
          }
     }
 

@@ -1,6 +1,7 @@
 package com.abocalypse.constructionflower.plan;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,9 +29,10 @@ import net.minecraft.world.ChunkCoordIntPair;
 
 public class MasterChunkBlocks extends ChunkBlocks {
 	
-	// this SortedMap shadows the Map of the superclass (but the constructor
+	// these SortedMap's shadows the Map of the superclass (but the constructor
 	// ensures that both are references to the same underlying TreeMap)
  	protected SortedMap<ChunkCoordIntPair,IBlockSet> spreadChunkBlockMap;
+ 	protected SortedMap<ChunkCoordIntPair,IBlockSet> spawnChunkBlockMap;
 
  	// this is filled in or updated only by findNeighbors()
 	private Map<BlockMember, Set<BlockMember>> neighborMap;
@@ -74,7 +76,7 @@ public class MasterChunkBlocks extends ChunkBlocks {
 
 	
 	public MasterChunkBlocks() {
-	    this.spawnChunkBlockMap = new HashMap<ChunkCoordIntPair, IBlockSet>();
+	    super.spawnChunkBlockMap = this.spawnChunkBlockMap = new TreeMap<ChunkCoordIntPair, IBlockSet>(comparator);
 	    super.spreadChunkBlockMap = this.spreadChunkBlockMap = new TreeMap<ChunkCoordIntPair,IBlockSet>(comparator);
 	}
 	
@@ -131,7 +133,7 @@ public class MasterChunkBlocks extends ChunkBlocks {
     	public List<BlockMember> getRandom(int n, Random random) {
     		n = Math.min(n, this.size());
 	    	List<BlockMember> list = new LinkedList<BlockMember>(this);
-	    	java.util.Collections.shuffle(list, random);
+	    	Collections.shuffle(list, random);
 	    	return new ArrayList<BlockMember>(list.subList(0, n));
     	}
 
@@ -171,6 +173,9 @@ public class MasterChunkBlocks extends ChunkBlocks {
     	// TODO It should not be necessary to recheck everything no matter how
     	// little has changed.
     	neighborMap = new HashMap<BlockMember, Set<BlockMember>>();
+    	if ( this.spreadChunkBlockMap.size() == 0 ) {
+    		return;
+    	}
 			
     	int oldChunkZPos = this.spreadChunkBlockMap.firstKey().chunkZPos;
     	
@@ -327,5 +332,10 @@ public class MasterChunkBlocks extends ChunkBlocks {
 
 			
     }
+
+	@Override
+	protected Map<ChunkCoordIntPair, IBlockSet> createMap() {
+		return new TreeMap<ChunkCoordIntPair, IBlockSet>();
+	}
 		
 }

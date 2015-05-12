@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import net.minecraft.world.ChunkCoordIntPair;
@@ -14,6 +16,16 @@ public class ChunkPlanBlocks extends ChunkBlocks {
 	public ChunkPlanBlocks() {
 		this.spawnChunkBlockMap = new HashMap<ChunkCoordIntPair,IBlockSet>();
 		this.spreadChunkBlockMap = new HashMap<ChunkCoordIntPair,IBlockSet>();
+	}
+	
+	public ChunkPlanBlocks(ChunkBlocks other) {
+		this();
+		for ( Entry<ChunkCoordIntPair,IBlockSet> entry : other.spawnChunkBlockMap.entrySet() ) {
+			this.spawnChunkBlockMap.put(entry.getKey(), new BlockSet(entry.getValue()));
+		}
+		for ( Entry<ChunkCoordIntPair,IBlockSet> entry : other.spreadChunkBlockMap.entrySet() ) {
+			this.spreadChunkBlockMap.put(entry.getKey(), new BlockSet(entry.getValue()));
+		}
 	}
 	
 	@SuppressWarnings("serial")
@@ -53,6 +65,11 @@ public class ChunkPlanBlocks extends ChunkBlocks {
 	@Override
 	protected IBlockSet createBlockSet(IBlockSet blocks) {
 		return new BlockSet(blocks);
+	}
+
+	@Override
+	protected Map<ChunkCoordIntPair, IBlockSet> createMap() {
+		return new HashMap<ChunkCoordIntPair,IBlockSet>();
 	}
 	
 }
