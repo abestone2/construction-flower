@@ -13,6 +13,7 @@ import com.abocalypse.constructionflower.network.LoadPlanMessage;
 import com.abocalypse.constructionflower.plan.BlockXZCoords;
 import com.abocalypse.constructionflower.plan.PlanPartSpec;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
+import com.abocalypse.constructionflower.truetyper.FontHelper;
 import com.abocalypse.constructionflower.util.ArrayCycler;
 import com.abocalypse.constructionflower.util.EnumCycler;
 
@@ -60,10 +61,27 @@ public class GuiLoadPlan extends GuiScreen {
 	
 	private EnumMap<ButtonID, GuiButton> buttons;
 	
+	private static enum HeaderID {
+		ANCHOR_AT, AT_X, AT_Z, PLAN_SPEC_HEADER, RELATIVE_TO_X, RELATIVE_TO_Z, PLAN_NAME;
+	}
+	private static final EnumMap<HeaderID, String> headerText = new EnumMap<HeaderID, String>(HeaderID.class);
+	static {
+		headerText.put(HeaderID.ANCHOR_AT, "Anchor at:");
+		headerText.put(HeaderID.AT_X, "X");
+		headerText.put(HeaderID.AT_Z, "Z");
+		headerText.put(HeaderID.PLAN_SPEC_HEADER, "Choose plan specification file:");
+		headerText.put(HeaderID.RELATIVE_TO_X, "X");
+		headerText.put(HeaderID.RELATIVE_TO_Z, "Z");
+		headerText.put(HeaderID.PLAN_NAME, "Plan name:");
+	}
+	private EnumMap<HeaderID, Integer> headerXPos;
+	private EnumMap<HeaderID, Integer> headerYPos;
+	private EnumSet<HeaderID> activeHeaders;
+	
 	@SideOnly(Side.CLIENT)
 	class PlanSpecList extends GuiSlot {
 
-		public PlanSpecList(int bottom) {
+		public PlanSpecList(int bottom, int top) {
 			super(GuiLoadPlan.this.mc, GuiLoadPlan.this.width - 2*GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH - GuiConstants.SCROLL_BAR_WIDTH, bottom - 2*GuiConstants.VERTICAL_GUTTER, GuiConstants.VERTICAL_GUTTER, bottom, GuiConstants.SLOT_HEIGHT);
 		}
 
@@ -110,17 +128,20 @@ public class GuiLoadPlan extends GuiScreen {
 		this.initial = initial;
 		this.availablePlanSpecs = planSpecFiles;
 		this.existingPlans = existingPlans;
-		this.planSpecSelected = -1;
+		planSpecSelected = -1;
 		if ( initial ) {
-			this.doneText = "Create With Selected Plan";
-			this.noSelectionCancelText = "Continue With No Plan";
-			this.selectionCancelText = "Cancel Plan and Continue";
+			doneText = "Create With Selected Plan";
+			noSelectionCancelText = "Continue With No Plan";
+			selectionCancelText = "Cancel Plan and Continue";
 		} else {
-			this.doneText = "Done";
-			this.noSelectionCancelText = "Cancel";
-			this.selectionCancelText = "Cancel";
+			doneText = "Done";
+			noSelectionCancelText = "Cancel";
+			selectionCancelText = "Cancel";
 		}
-		this.buttons = new EnumMap<ButtonID, GuiButton>(ButtonID.class);
+		buttons = new EnumMap<ButtonID, GuiButton>(ButtonID.class);
+		activeHeaders = EnumSet.noneOf(HeaderID.class);
+		headerXPos = new EnumMap<HeaderID, Integer>(HeaderID.class);
+		headerYPos = new EnumMap<HeaderID, Integer>(HeaderID.class);
 	}
 	
 	@Override
@@ -134,12 +155,12 @@ public class GuiLoadPlan extends GuiScreen {
 		//  a remote server, has transmitted a list of plan specs stored remotely; in that
 		//  case this.availablePlans was already loaded up in the constructor)
 		if ( initial ) {
-			this.availablePlanSpecs = WorldPlanRegistry.getAvailablePlans();
+			this.availablePlanSpecs = WorldPlanRegistry.getAvailablePlanSpecFiles();
 		}
 		
 		if ( availablePlanSpecs.size() == 0 ) {
 			if ( initial ) {
-				this.mc.displayGuiScreen(parentScreen);
+				((GuiCreateConstructionFlowerWorld)parentScreen).continueCreatingWorld();
 			} else {
 				this.mc.displayGuiScreen(new GuiErrorScreen("No plans available", ""));
 				return;
@@ -157,50 +178,79 @@ public class GuiLoadPlan extends GuiScreen {
 		y = addButtonRow(ButtonID.CANCEL, "", ButtonID.DONE, doneText, y);
 		buttons.get(ButtonID.DONE).enabled = false;
 
-		int yDown = GuiConstants.VERTICAL_GUTTER;
+		int x;
+		int yDown = GuiConstants.VERTICAL_GUTTER + 2*GuiConstants.SPACE_FOR_HEADER_ROW;
 		int textFieldWidth = (GuiConstants.BUTTON_WIDTH - GuiConstants.HORIZONTAL_GUTTER)/2;
-		this.xAnchorField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
-		this.zAnchorField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - textFieldWidth, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
-		this.xAnchorField.setText("0");
-		this.zAnchorField.setText("0");
+		
+		int sideButtonFirstColumn = width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH; 
+		int sideButtonSecondColumn = width - GuiConstants.HORIZONTAL_GUTTER - textFieldWidth; 
+		
+		x = sideButtonFirstColumn;
+		xAnchorField = new GuiTextField(this.fontRendererObj, x, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		xAnchorField.setText("0");
+		addHeadersAbove(new HeaderID[]{HeaderID.AT_X, HeaderID.ANCHOR_AT}, x, yDown);
+		activeHeaders.add(HeaderID.ANCHOR_AT);
+		activeHeaders.add(HeaderID.AT_X);
+		x = sideButtonSecondColumn;
+		zAnchorField = new GuiTextField(this.fontRendererObj, x, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		zAnchorField.setText("0");
+		addHeadersAbove(new HeaderID[]{HeaderID.AT_Z}, x, yDown);
+		activeHeaders.add(HeaderID.AT_Z);
+
 		yDown += GuiConstants.TEXT_FIELD_HEIGHT + GuiConstants.VERTICAL_GUTTER;
-		this.anchorMode = new EnumCycler<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
+		anchorMode = new EnumCycler<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
 		if ( initial ) {
-			this.skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN, WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION);
-			this.relativeToPlanAllowed = false;
+			skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN, WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION);
+			relativeToPlanAllowed = false;
 		} else if ( this.existingPlans.size() == 0 ) {
-			this.skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN);
-			this.relativeToPlanAllowed = false;
+			skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN);
+			relativeToPlanAllowed = false;
 		} else {
-			this.relativeToPlanAllowed = true;
+			relativeToPlanAllowed = true;
 		}
-		yDown = addSideButton(ButtonID.ANCHOR_MODE, "", yDown);
+
+		x = sideButtonFirstColumn;
+		yDown = addSideButton(ButtonID.ANCHOR_MODE, "", x, yDown);
 		buttons.get(ButtonID.ANCHOR_MODE).enabled = false;
+
 		yDown += GuiConstants.VERTICAL_GUTTER;
-		this.xAnchorRelativeToField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
-		this.zAnchorRelativeToField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - textFieldWidth, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
-		this.xAnchorRelativeToField.setText("0");
-		this.zAnchorRelativeToField.setText("0");
-		if ( this.relativeToPlanAllowed ) {
-			this.existingPlansCycler = new ArrayCycler<String>(new ArrayList<String>(this.existingPlans.keySet()));
-			addSideButton(ButtonID.RELATIVE_TO_PLAN, "", yDown);
+		if ( relativeToPlanAllowed ) {
+			existingPlansCycler = new ArrayCycler<String>(new ArrayList<String>(this.existingPlans.keySet()));
+			addSideButton(ButtonID.RELATIVE_TO_PLAN, "", x, yDown);
 			buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = false;
 			buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
 		} else {
-			this.planSelected = null;
+			planSelected = null;
 		}
+
+		yDown += GuiConstants.SPACE_FOR_HEADER_ROW;
+		xAnchorRelativeToField = new GuiTextField(this.fontRendererObj, x, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		addHeadersAbove(new HeaderID[]{HeaderID.RELATIVE_TO_X}, x, yDown);
+		xAnchorRelativeToField.setText("0");
+		x = sideButtonSecondColumn;
+		zAnchorRelativeToField = new GuiTextField(this.fontRendererObj, x, yDown, textFieldWidth, GuiConstants.TEXT_FIELD_HEIGHT);
+		addHeadersAbove(new HeaderID[]{HeaderID.RELATIVE_TO_Z}, x, yDown);
+		zAnchorRelativeToField.setText("0");
+
+		x = sideButtonFirstColumn;
 		yDown += GuiConstants.VERTICAL_GUTTER + GuiConstants.TEXT_FIELD_HEIGHT;
 		this.orientation = new EnumCycler<PlanPartSpec.Orientation>(PlanPartSpec.Orientation.class);
-		yDown = addSideButton(ButtonID.ORIENTATION, "", yDown);
+		yDown = addSideButton(ButtonID.ORIENTATION, "", x, yDown);
 		buttons.get(ButtonID.ORIENTATION).enabled = false;
 		if ( !initial ) {
-			yDown += GuiConstants.VERTICAL_GUTTER;
+			yDown += GuiConstants.VERTICAL_GUTTER + GuiConstants.SPACE_FOR_HEADER_ROW;
 			this.planNameField = new GuiTextField(this.fontRendererObj, this.width - GuiConstants.HORIZONTAL_GUTTER - GuiConstants.BUTTON_WIDTH, yDown, GuiConstants.BUTTON_WIDTH, GuiConstants.TEXT_FIELD_HEIGHT);
 			this.planNameField.setText("New Plan");
+			addHeadersAbove(new HeaderID[]{HeaderID.PLAN_NAME}, x, yDown);
+			activeHeaders.add(HeaderID.PLAN_NAME);
 			yDown += GuiConstants.TEXT_FIELD_HEIGHT;
 		}
-		this.selectPlanSpec = new PlanSpecList(y);
+		
+		yDown = GuiConstants.VERTICAL_GUTTER + GuiConstants.SPACE_FOR_HEADER_ROW;
+		this.selectPlanSpec = new PlanSpecList(y, yDown);
 		this.selectPlanSpec.registerScrollButtons(ButtonID.SCROLL_UP.ordinal(), ButtonID.SCROLL_DOWN.ordinal());
+		addHeadersAbove(new HeaderID[]{HeaderID.PLAN_SPEC_HEADER}, GuiConstants.HORIZONTAL_GUTTER, yDown);
+		activeHeaders.add(HeaderID.PLAN_SPEC_HEADER);
 		
 		setButtonTexts();
 	}
@@ -329,6 +379,13 @@ public class GuiLoadPlan extends GuiScreen {
 						buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
 					}
 				}
+				if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+					activeHeaders.add(HeaderID.RELATIVE_TO_X);
+					activeHeaders.add(HeaderID.RELATIVE_TO_Z);
+				} else {
+					activeHeaders.remove(HeaderID.RELATIVE_TO_X);
+					activeHeaders.remove(HeaderID.RELATIVE_TO_Z);
+				}
 				setButtonTexts();
 				break;
 			case RELATIVE_TO_PLAN :
@@ -356,6 +413,14 @@ public class GuiLoadPlan extends GuiScreen {
 		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
 				this.xAnchorRelativeToField.drawTextBox();
 				this.zAnchorRelativeToField.drawTextBox();
+		}
+		if ( activeHeaders.size() > 0 ) {
+			// GL11.glPushMatrix();
+			// GL11.glScalef(GuiConstants.HEADER_SCALE, GuiConstants.HEADER_SCALE, GuiConstants.HEADER_SCALE);
+			for ( HeaderID header : activeHeaders ) {
+				FontHelper.drawString(headerText.get(header), headerXPos.get(header) , headerYPos.get(header), GuiHeaderFont.getFont(), 1.0F, 1.0F, GuiConstants.HEADER_COLOR);
+			}
+			// GL11.glPopMatrix();
 		}
 		super.drawScreen(p_73863_1_, p_73863_2_, p_73863_3_);
 	}
@@ -428,12 +493,19 @@ public class GuiLoadPlan extends GuiScreen {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private int addSideButton(ButtonID id, String text, int yDown) {
+	private int addSideButton(ButtonID id, String text, int x, int yDown) {
 		yDown += GuiConstants.VERTICAL_GUTTER;
-		buttons.put(id, new GuiButton(id.ordinal(), this.width - GuiConstants.BUTTON_WIDTH - GuiConstants.HORIZONTAL_GUTTER, yDown, GuiConstants.BUTTON_WIDTH, GuiConstants.BUTTON_HEIGHT, text));
+		buttons.put(id, new GuiButton(id.ordinal(), x, yDown, GuiConstants.BUTTON_WIDTH, GuiConstants.BUTTON_HEIGHT, text));
 		buttonList.add(buttons.get(id));
 		yDown += GuiConstants.BUTTON_HEIGHT;
 		return yDown;
 	}
 
+	private void addHeadersAbove(HeaderID[] headers, int x, int y) {
+		for ( HeaderID header : headers ) {
+			y -= GuiConstants.HEADER_VERTICAL_GUTTER + GuiConstants.HEADER_HEIGHT;
+			headerXPos.put(header, x);
+			headerYPos.put(header, y);
+		}
+	}
 }

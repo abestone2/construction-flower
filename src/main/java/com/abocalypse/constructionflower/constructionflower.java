@@ -14,6 +14,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 import com.abocalypse.constructionflower.blocks.ModBlocks;
+import com.abocalypse.constructionflower.client.gui.GuiHeaderFont;
 import com.abocalypse.constructionflower.command.LoadPlanCommand;
 import com.abocalypse.constructionflower.command.ManagePlansCommand;
 import com.abocalypse.constructionflower.event.EventListener;
@@ -48,6 +49,7 @@ public class ConstructionFlower {
     	ModBlocks.preInit();
     	proxy.registerRenderers();
     	MinecraftForge.EVENT_BUS.register(new EventListener());
+    	GuiHeaderFont.init();
 
     }
 

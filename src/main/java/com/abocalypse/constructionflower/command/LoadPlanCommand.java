@@ -48,7 +48,7 @@ public class LoadPlanCommand implements ICommand {
 	@Override
 	public void processCommand(ICommandSender sender, String[] args) {
 		if ( sender instanceof EntityPlayerMP ) {
-			List<String> planSpecFiles = WorldPlanRegistry.getAvailablePlans();
+			List<String> planSpecFiles = WorldPlanRegistry.getAvailablePlanSpecFiles();
 			Map<String, BlockXZCoords> existingPlans = new HashMap<String, BlockXZCoords>();
 			WorldPlanRegistry registry = WorldPlanRegistry.get(((EntityPlayerMP)sender).worldObj);
 			Map<String, WorldPlanRegistry.PlanInfo> loadedPlans = registry.loadedPlans();

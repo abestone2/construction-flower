@@ -8,13 +8,17 @@ import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 public class GuiConstants {
 	
 	public static final int HORIZONTAL_GUTTER = 5;
-	public static final int VERTICAL_GUTTER = 8;
+	public static final int VERTICAL_GUTTER = 6;
 	public static final int BUTTON_WIDTH = 150;
 	public static final int BUTTON_HEIGHT = 20;
 	public static final int SLOT_HEIGHT = 20;
 	public static final int TEXT_FIELD_HEIGHT = 20;
-	public static final int HEADER_HEIGHT = 20;
 	public static final int SCROLL_BAR_WIDTH = 8;
+
+	public static final int HEADER_HEIGHT = 12;
+	public static final int HEADER_VERTICAL_GUTTER = 2;
+	public static final int SPACE_FOR_HEADER_ROW = HEADER_HEIGHT + HEADER_VERTICAL_GUTTER;
+	public static final float[] HEADER_COLOR = new float[]{0.53125F, 0.53125F, 0.8125F, 1.0F};
 	
 	public static final EnumMap<PlanPartSpec.Orientation, String> ORIENTATION_TEXT;
 	static {

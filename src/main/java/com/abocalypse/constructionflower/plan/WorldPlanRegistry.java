@@ -160,11 +160,13 @@ public class WorldPlanRegistry extends WorldSavedData {
 		
 	}
 	
-	public static List<String> getAvailablePlans() {
+	public static List<String> getAvailablePlanSpecFiles() {
 		ArrayList<String> ret = new ArrayList<String>();
 		File[] planFiles = ConfigHandler.planDir.listFiles(new PlanFilter());
-		for ( File planFile : planFiles ) {
-			ret.add(planFile.getName());
+		if ( planFiles != null ) {
+			for (File planFile : planFiles) {
+				ret.add(planFile.getName());
+			}
 		}
 		return ret;
 	}

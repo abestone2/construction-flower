@@ -36,6 +36,8 @@ public class GuiSlotPlanList extends GuiSlot {
 		
 		this.planList = new ArrayList<String>(plans.keySet());
 		this.planSelected = 0;
+		
+		this.setHasListHeader(false, 0);
 	}
 
 	public void activate() {
