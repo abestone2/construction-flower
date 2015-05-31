@@ -2,6 +2,9 @@ package com.abocalypse.constructionflower;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -41,7 +44,8 @@ public class ConstructionFlower {
 	
 	public static int constructionFlowerRenderId;
 	
-
+	public static Logger logger = LogManager.getLogger(Constants.MODID);
+			
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
     	

@@ -9,6 +9,7 @@ buildscript {
             name = "sonatype"
             url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
+	jcenter()
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
@@ -28,6 +29,7 @@ minecraft {
     } else {
         runDir = "run"
     }
+    srgExtra "PK: com/googlecode/json-simple com/abocalypse/com/googlecode/json-simple"
 }
 
 dependencies {
@@ -65,3 +67,24 @@ processResources
         exclude 'mcmod.info'
     }
 }
+
+// Include external libs in compilation and jar
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+dependencies {
+    shade 'com.googlecode.json-simple:json-simple:1.1.1'
+}
+
+
+jar {
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}
+
+
