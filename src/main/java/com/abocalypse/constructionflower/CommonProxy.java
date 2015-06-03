@@ -2,8 +2,12 @@ package com.abocalypse.constructionflower;
 
 public class CommonProxy {
 
-	public void registerRenderers() {
-		// Nothing here as the server doesn't render graphics or entities!
+	public void preInit() {
+		// nothing to do here
+	}
+	
+	public void init() {
+		// nothing to do here
 	}
 
 }

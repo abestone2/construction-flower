@@ -2,10 +2,11 @@ package com.abocalypse.constructionflower;
 
 import java.io.File;
 
+import net.minecraftforge.common.MinecraftForge;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -17,13 +18,11 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 import com.abocalypse.constructionflower.blocks.ModBlocks;
-import com.abocalypse.constructionflower.client.gui.GuiHeaderFont;
 import com.abocalypse.constructionflower.command.LoadPlanCommand;
 import com.abocalypse.constructionflower.command.ManagePlansCommand;
 import com.abocalypse.constructionflower.event.EventListener;
 import com.abocalypse.constructionflower.lib.ConfigHandler;
 import com.abocalypse.constructionflower.lib.Constants;
-import com.abocalypse.constructionflower.network.OpenGuiLoadPlanMessage;
 import com.abocalypse.constructionflower.network.LoadPlanMessage;
 import com.abocalypse.constructionflower.network.LoadedPlansMessage;
 import com.abocalypse.constructionflower.network.SpawnedOntoBlocksMessage;
@@ -51,9 +50,8 @@ public class ConstructionFlower {
     	
     	ConfigHandler.init(event.getSuggestedConfigurationFile(), new File(event.getModConfigurationDirectory(), Constants.MODPATH));
     	ModBlocks.preInit();
-    	proxy.registerRenderers();
-    	MinecraftForge.EVENT_BUS.register(new EventListener());
-    	GuiHeaderFont.init();
+  		MinecraftForge.EVENT_BUS.register(new EventListener());
+  		proxy.preInit();
 
     }
 
@@ -64,10 +62,8 @@ public class ConstructionFlower {
     	
      	network = new SimpleNetworkWrapper(Constants.MODID + "_Channel");
      	network.registerMessage(LoadPlanMessage.Handler.class, LoadPlanMessage.class, 2, Side.SERVER);
-    	network.registerMessage(OpenGuiLoadPlanMessage.Handler.class, OpenGuiLoadPlanMessage.class, 4, Side.CLIENT);
-    	network.registerMessage(LoadedPlansMessage.ClientHandler.class, LoadedPlansMessage.class, 6, Side.CLIENT);
     	network.registerMessage(LoadedPlansMessage.ServerHandler.class, LoadedPlansMessage.class, 5, Side.SERVER);
-    	network.registerMessage(SpawnedOntoBlocksMessage.Handler.class, SpawnedOntoBlocksMessage.class, 7, Side.CLIENT);
+    	proxy.init();
     }
 
     @Mod.EventHandler
