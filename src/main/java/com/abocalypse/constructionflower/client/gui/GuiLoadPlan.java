@@ -9,9 +9,10 @@ import java.util.Map;
 import org.lwjgl.input.Keyboard;
 
 import com.abocalypse.constructionflower.ConstructionFlower;
+import com.abocalypse.constructionflower.lib.EnumAnchorMode;
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 import com.abocalypse.constructionflower.network.LoadPlanMessage;
 import com.abocalypse.constructionflower.plan.BlockXZCoords;
-import com.abocalypse.constructionflower.plan.PlanPartSpec;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 import com.abocalypse.constructionflower.truetyper.FontHelper;
 import com.abocalypse.constructionflower.util.ArrayCycler;
@@ -49,9 +50,9 @@ public class GuiLoadPlan extends GuiScreen {
 	private GuiTextField zAnchorField;
 	private GuiTextField xAnchorRelativeToField;
 	private GuiTextField zAnchorRelativeToField;
-	private EnumCycler<PlanPartSpec.Orientation> orientation;
-	private EnumCycler<WorldPlanRegistry.AnchorMode> anchorMode;
-	private EnumSet<WorldPlanRegistry.AnchorMode> skipAnchorModes;
+	private EnumCycler<EnumOrientation> orientation;
+	private EnumCycler<EnumAnchorMode> anchorMode;
+	private EnumSet<EnumAnchorMode> skipAnchorModes;
 	private ArrayCycler<String> existingPlansCycler;
 	private GuiTextField planNameField;
 	
@@ -198,12 +199,12 @@ public class GuiLoadPlan extends GuiScreen {
 		activeHeaders.add(HeaderID.AT_Z);
 
 		yDown += GuiConstants.TEXT_FIELD_HEIGHT + GuiConstants.VERTICAL_GUTTER;
-		anchorMode = new EnumCycler<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
+		anchorMode = new EnumCycler<EnumAnchorMode>(EnumAnchorMode.class);
 		if ( initial ) {
-			skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN, WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION);
+			skipAnchorModes = EnumSet.of(EnumAnchorMode.RELATIVE_TO_PLAN, EnumAnchorMode.RELATIVE_TO_POSITION);
 			relativeToPlanAllowed = false;
 		} else if ( this.existingPlans.size() == 0 ) {
-			skipAnchorModes = EnumSet.of(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN);
+			skipAnchorModes = EnumSet.of(EnumAnchorMode.RELATIVE_TO_PLAN);
 			relativeToPlanAllowed = false;
 		} else {
 			relativeToPlanAllowed = true;
@@ -234,7 +235,7 @@ public class GuiLoadPlan extends GuiScreen {
 
 		x = sideButtonFirstColumn;
 		yDown += GuiConstants.VERTICAL_GUTTER + GuiConstants.TEXT_FIELD_HEIGHT;
-		this.orientation = new EnumCycler<PlanPartSpec.Orientation>(PlanPartSpec.Orientation.class);
+		this.orientation = new EnumCycler<EnumOrientation>(EnumOrientation.class);
 		yDown = addSideButton(ButtonID.ORIENTATION, "", x, yDown);
 		buttons.get(ButtonID.ORIENTATION).enabled = false;
 		if ( !initial ) {
@@ -340,7 +341,7 @@ public class GuiLoadPlan extends GuiScreen {
 				}
 				anchor.add(anchorRelativeTo);
 				
-				WorldPlanRegistry.AnchorMode anchorModeToStore = ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION ) ? WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS : anchorMode.value();
+				EnumAnchorMode anchorModeToStore = ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_POSITION ) ? EnumAnchorMode.RELATIVE_TO_COORDS : anchorMode.value();
 				
 				WorldPlanRegistry.PlanPosition position = new WorldPlanRegistry.PlanPosition(anchor, anchorModeToStore, anchorRelativeTo, this.planSelected, orientation.value());
 				
@@ -371,7 +372,7 @@ public class GuiLoadPlan extends GuiScreen {
 			case ANCHOR_MODE :
 				anchorMode.advanceToNot(this.skipAnchorModes);
 				if ( this.relativeToPlanAllowed ) {
-					if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN ) {
+					if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_PLAN ) {
 						buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = true;
 						buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = true;
 					} else {
@@ -379,7 +380,7 @@ public class GuiLoadPlan extends GuiScreen {
 						buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
 					}
 				}
-				if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+				if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 					activeHeaders.add(HeaderID.RELATIVE_TO_X);
 					activeHeaders.add(HeaderID.RELATIVE_TO_Z);
 				} else {
@@ -410,7 +411,7 @@ public class GuiLoadPlan extends GuiScreen {
 		if ( !initial ) {
 			this.planNameField.drawTextBox();
 		}
-		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+		if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 				this.xAnchorRelativeToField.drawTextBox();
 				this.zAnchorRelativeToField.drawTextBox();
 		}
@@ -433,7 +434,7 @@ public class GuiLoadPlan extends GuiScreen {
 		if ( !initial ) {
 			this.planNameField.updateCursorCounter();
 		}
-		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+		if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 			this.xAnchorRelativeToField.updateCursorCounter();
 			this.zAnchorRelativeToField.updateCursorCounter();
 		}
@@ -450,7 +451,7 @@ public class GuiLoadPlan extends GuiScreen {
         if ( !initial && this.planNameField.isFocused() ) {
         	this.planNameField.textboxKeyTyped(par1,  par2);
         }
-        if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+        if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
         	if ( this.xAnchorRelativeToField.isFocused() ) {
         		this.xAnchorRelativeToField.textboxKeyTyped(par1, par2);
         	}
@@ -468,7 +469,7 @@ public class GuiLoadPlan extends GuiScreen {
 		if ( !initial ) {
 			this.planNameField.mouseClicked(x, y, buttonClicked);
 		}
-		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+		if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 			this.xAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
 			this.zAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
 		}

@@ -27,15 +27,15 @@ import net.minecraftforge.common.IPlantable;
 
 public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 
-	public static enum PART {
+	public static enum PlantPart {
 		STEM, SEPAL, FLOWER
 	}
 	
-	protected EnumMap<PART,IIcon> iconMap = new EnumMap<PART, IIcon>(PART.class);
+	protected EnumMap<PlantPart,IIcon> iconMap = new EnumMap<PlantPart, IIcon>(PlantPart.class);
 	
 	public BlockConstructionFlower() {
 		// It's not clear to me what depends on the argument to the
-		// BlockFlower constructor. Hope this works.
+		// the super (i.e., BlockFlower) constructor. Hope this works.
 		super(0);
 		this.setStepSound(Block.soundTypeGrass);
 		this.setCreativeTab(CreativeTabs.tabDecorations);
@@ -49,7 +49,7 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public IIcon getWorldIcon(PART part) {
+	public IIcon getWorldIcon(PlantPart part) {
 		return this.iconMap.get(part);
 	}
 	
@@ -59,9 +59,9 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 	{
 		this.blockIcon = iconRegister.registerIcon("constructionflower:constructionFlower");
 		
-		this.iconMap.put(PART.STEM, iconRegister.registerIcon("constructionflower:stem"));
-		this.iconMap.put(PART.SEPAL, iconRegister.registerIcon("constructionflower:sepal"));
-		this.iconMap.put(PART.FLOWER, iconRegister.registerIcon("constructionflower:flower"));
+		this.iconMap.put(PlantPart.STEM, iconRegister.registerIcon("constructionflower:stem"));
+		this.iconMap.put(PlantPart.SEPAL, iconRegister.registerIcon("constructionflower:sepal"));
+		this.iconMap.put(PlantPart.FLOWER, iconRegister.registerIcon("constructionflower:flower"));
 
 	}
 	
@@ -71,6 +71,11 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
 		return ConstructionFlower.constructionFlowerRenderId;
 	}
 	
+	// The way grass and foliage works is that there's a grayscale
+	// texture, which then gets multiplied by a different color value
+	// depending on the biome and height. Currently the construction
+	// flower leaves and sepals are the color of grass (but this probably
+	// should be changed, they can be hard to see against the background).
 	@SideOnly(Side.CLIENT)
     public int colorMultiplier(IBlockAccess world, int x, int y, int z)
     {
@@ -113,7 +118,10 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
     {
         return super.canPlaceBlockAt(world, x, y, z) && canThisPlantGrowOnThisBlock(world.getBlock(x, y - 1, z));
     }
-    
+
+    // This list maybe should be made longer? Although there are
+    // usually enough of these blocks around (and I don't like the
+    // idea that the flower could "grow" on stone, gravel, etc.).
     private boolean canThisPlantGrowOnThisBlock(Block block)
     {
     	return (block.equals(Blocks.grass)
@@ -122,7 +130,11 @@ public class BlockConstructionFlower extends BlockFlower implements IPlantable{
     			|| block.equals(Blocks.sand));
     }
     
-    
+    // This is the only part that's really special to the mod.
+    // On random ticks, check to see if there's still a plan under this
+    // flower; if not, it disappears (currently without dropping
+    // anything). Or, on the other hand, if there is still a plan
+    // under it, try to spread to neighboring blocks.
     public void updateTick(World world, int x, int y, int z, Random random) {
     	if ( !world.isRemote ) {
     		WorldPlanRegistry registry = WorldPlanRegistry.get(world);

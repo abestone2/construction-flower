@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 import com.google.common.primitives.Ints;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -443,7 +444,7 @@ public abstract class ChunkBlocks {
 			return fullSin*x + fullCos*z;
 		}
 		
-		private int getCos(PlanPartSpec.Orientation orientation) {
+		private int getCos(EnumOrientation orientation) {
 			switch( orientation ) {
 			case TOPNORTH : return 1;
 			case TOPEAST : case TOPWEST : return 0;
@@ -452,7 +453,7 @@ public abstract class ChunkBlocks {
 			}
 		}
 	
-		private int getSin(PlanPartSpec.Orientation orientation) {
+		private int getSin(EnumOrientation orientation) {
 			switch( orientation ) {
 			case TOPNORTH : case TOPSOUTH : return 0;
 			case TOPEAST : return -1;

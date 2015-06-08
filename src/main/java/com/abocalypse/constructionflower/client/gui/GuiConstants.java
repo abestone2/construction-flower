@@ -2,8 +2,8 @@ package com.abocalypse.constructionflower.client.gui;
 
 import java.util.EnumMap;
 
-import com.abocalypse.constructionflower.plan.PlanPartSpec;
-import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
+import com.abocalypse.constructionflower.lib.EnumAnchorMode;
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 
 public class GuiConstants {
 	
@@ -20,23 +20,23 @@ public class GuiConstants {
 	public static final int SPACE_FOR_HEADER_ROW = HEADER_HEIGHT + HEADER_VERTICAL_GUTTER;
 	public static final float[] HEADER_COLOR = new float[]{0.53125F, 0.53125F, 0.8125F, 1.0F};
 	
-	public static final EnumMap<PlanPartSpec.Orientation, String> ORIENTATION_TEXT;
+	public static final EnumMap<EnumOrientation, String> ORIENTATION_TEXT;
 	static {
-		ORIENTATION_TEXT = new EnumMap<PlanPartSpec.Orientation, String>(PlanPartSpec.Orientation.class);
-		ORIENTATION_TEXT.put(PlanPartSpec.Orientation.TOPNORTH, "Top of Plan is North");
-		ORIENTATION_TEXT.put(PlanPartSpec.Orientation.TOPEAST, "Top of Plan is East");
-		ORIENTATION_TEXT.put(PlanPartSpec.Orientation.TOPSOUTH, "Top of Plan is South");
-		ORIENTATION_TEXT.put(PlanPartSpec.Orientation.TOPWEST, "Top of Plan is West");
+		ORIENTATION_TEXT = new EnumMap<EnumOrientation, String>(EnumOrientation.class);
+		ORIENTATION_TEXT.put(EnumOrientation.TOPNORTH, "Top of Plan is North");
+		ORIENTATION_TEXT.put(EnumOrientation.TOPEAST, "Top of Plan is East");
+		ORIENTATION_TEXT.put(EnumOrientation.TOPSOUTH, "Top of Plan is South");
+		ORIENTATION_TEXT.put(EnumOrientation.TOPWEST, "Top of Plan is West");
 	}
 	
-	public static final EnumMap<WorldPlanRegistry.AnchorMode, String> ANCHOR_MODE_TEXT;
+	public static final EnumMap<EnumAnchorMode, String> ANCHOR_MODE_TEXT;
 	static {
-		ANCHOR_MODE_TEXT= new EnumMap<WorldPlanRegistry.AnchorMode, String>(WorldPlanRegistry.AnchorMode.class);
-		ANCHOR_MODE_TEXT.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_ORIGIN, "Relative to Origin");
-		ANCHOR_MODE_TEXT.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_SPAWN, "Relative to Spawn Point");
-		ANCHOR_MODE_TEXT.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS, "Relative to:");
-		ANCHOR_MODE_TEXT.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION, "Relative to My Position");
-		ANCHOR_MODE_TEXT.put(WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN, "Relative to Anchor of:");
+		ANCHOR_MODE_TEXT= new EnumMap<EnumAnchorMode, String>(EnumAnchorMode.class);
+		ANCHOR_MODE_TEXT.put(EnumAnchorMode.RELATIVE_TO_ORIGIN, "Relative to Origin");
+		ANCHOR_MODE_TEXT.put(EnumAnchorMode.RELATIVE_TO_SPAWN, "Relative to Spawn Point");
+		ANCHOR_MODE_TEXT.put(EnumAnchorMode.RELATIVE_TO_COORDS, "Relative to:");
+		ANCHOR_MODE_TEXT.put(EnumAnchorMode.RELATIVE_TO_POSITION, "Relative to My Position");
+		ANCHOR_MODE_TEXT.put(EnumAnchorMode.RELATIVE_TO_PLAN, "Relative to Anchor of:");
 	}
 
 

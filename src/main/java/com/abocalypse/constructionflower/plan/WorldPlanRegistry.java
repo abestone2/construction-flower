@@ -30,8 +30,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.abocalypse.constructionflower.lib.EnumAnchorMode;
 import com.abocalypse.constructionflower.lib.ConfigHandler;
 import com.abocalypse.constructionflower.lib.Constants;
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 import com.abocalypse.constructionflower.plan.ChunkBlocks.BlockMember;
 import com.abocalypse.constructionflower.world.SpawnHandler;
 
@@ -115,10 +117,10 @@ public class WorldPlanRegistry extends WorldSavedData {
 		String levelName = this.worldObj.getWorldInfo().getWorldName();
 		if ( initialPlans.containsKey(levelName) ) {
 			InitialPlan initialPlan = initialPlans.get(levelName);
-			if ( initialPlan.position.anchorMode == AnchorMode.RELATIVE_TO_SPAWN && this.worldObj.findingSpawnPoint ) {
+			if ( initialPlan.position.anchorMode == EnumAnchorMode.RELATIVE_TO_SPAWN && this.worldObj.findingSpawnPoint ) {
 				initialized = false;
 			} else {
-				if (initialPlan.position.anchorMode == AnchorMode.RELATIVE_TO_SPAWN ) {
+				if (initialPlan.position.anchorMode == EnumAnchorMode.RELATIVE_TO_SPAWN ) {
 					ChunkCoordinates spawnPoint = this.worldObj.getSpawnPoint();
 					initialPlan.position.anchorRelativeToCoords = new BlockXZCoords(spawnPoint.posX, spawnPoint.posZ);
 					initialPlan.position.anchor.add(initialPlan.position.anchorRelativeToCoords);
@@ -220,29 +222,25 @@ public class WorldPlanRegistry extends WorldSavedData {
 		tagCompound.setTag(PLAN_REGISTRY_NAME, ourTagCompound);
 	}
 
-	public static enum AnchorMode {
-		RELATIVE_TO_ORIGIN, RELATIVE_TO_SPAWN, RELATIVE_TO_POSITION, RELATIVE_TO_PLAN, RELATIVE_TO_COORDS
-	}
-	
 	public static class PlanPosition {
 
 		public BlockXZCoords anchor;
-		public AnchorMode anchorMode;
+		public EnumAnchorMode anchorMode;
 		public BlockXZCoords anchorRelativeToCoords;
 		public String anchorRelativeToPlan;
-		public PlanPartSpec.Orientation orientation;
+		public EnumOrientation orientation;
 		
 		public PlanPosition() {}
 		
-		public PlanPosition(BlockXZCoords anchor, PlanPartSpec.Orientation orientation) {
+		public PlanPosition(BlockXZCoords anchor, EnumOrientation orientation) {
 			this.anchor = anchor;
-			this.anchorMode = AnchorMode.RELATIVE_TO_ORIGIN;
+			this.anchorMode = EnumAnchorMode.RELATIVE_TO_ORIGIN;
 			this.anchorRelativeToCoords = new BlockXZCoords(0,0);
 			this.anchorRelativeToPlan = null;
 			this.orientation = orientation;
 		}
 
-		public PlanPosition(BlockXZCoords anchor, AnchorMode anchorMode, BlockXZCoords anchorRelativeToCoords, String anchorRelativeToPlan, PlanPartSpec.Orientation orientation) {
+		public PlanPosition(BlockXZCoords anchor, EnumAnchorMode anchorMode, BlockXZCoords anchorRelativeToCoords, String anchorRelativeToPlan, EnumOrientation orientation) {
 			this.anchor = anchor;
 			this.anchorMode = anchorMode;
 			this.anchorRelativeToCoords = anchorRelativeToCoords;
@@ -315,7 +313,7 @@ public class WorldPlanRegistry extends WorldSavedData {
 			tagCompound.setTag("anchor", this.anchor.tagCompound());
 			tagCompound.setString("anchor mode", this.anchorMode.toString());
 			tagCompound.setTag("anchor relative to", this.anchorRelativeToCoords.tagCompound());
-			if ( this.anchorMode == AnchorMode.RELATIVE_TO_PLAN ) {
+			if ( this.anchorMode == EnumAnchorMode.RELATIVE_TO_PLAN ) {
 				tagCompound.setString("anchor relative to plan", this.anchorRelativeToPlan);
 			}
 			tagCompound.setString("orientation", this.orientation.toString());
@@ -323,12 +321,12 @@ public class WorldPlanRegistry extends WorldSavedData {
 		
 		public void readFromNBT(NBTTagCompound tagCompound) {
 			this.anchor = new BlockXZCoords(tagCompound.getCompoundTag("anchor"));
-			this.anchorMode = AnchorMode.valueOf(tagCompound.getString("anchor mode"));
+			this.anchorMode = EnumAnchorMode.valueOf(tagCompound.getString("anchor mode"));
 			this.anchorRelativeToCoords = new BlockXZCoords(tagCompound.getCompoundTag("anchor relative to"));
-			if ( this.anchorMode == AnchorMode.RELATIVE_TO_PLAN ) {
+			if ( this.anchorMode == EnumAnchorMode.RELATIVE_TO_PLAN ) {
 				this.anchorRelativeToPlan = tagCompound.getString("anchor relative to plan");
 			}
-			this.orientation = PlanSpec.Orientation.valueOf(tagCompound.getString("orientation"));
+			this.orientation = EnumOrientation.valueOf(tagCompound.getString("orientation"));
 		}
 
 	}
@@ -384,7 +382,7 @@ public class WorldPlanRegistry extends WorldSavedData {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			spec.load(position.anchor.x, position.anchor.z, PlanPartSpec.Orientation.TOPNORTH, chunkPlanBlocks);
+			spec.load(position.anchor.x, position.anchor.z, EnumOrientation.TOPNORTH, chunkPlanBlocks);
 		}
 		
 		public boolean containsChunk(ChunkCoordIntPair chunk, EnumConstructionFlowerLevel level) {

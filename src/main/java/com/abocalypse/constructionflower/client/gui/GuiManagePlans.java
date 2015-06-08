@@ -13,10 +13,15 @@ import java.util.TreeMap;
 import org.lwjgl.input.Keyboard;
 // import org.lwjgl.opengl.GL11;
 
+
+
+
+
 import com.abocalypse.constructionflower.ConstructionFlower;
+import com.abocalypse.constructionflower.lib.EnumAnchorMode;
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 import com.abocalypse.constructionflower.network.LoadedPlansMessage;
 import com.abocalypse.constructionflower.plan.BlockXZCoords;
-import com.abocalypse.constructionflower.plan.PlanPartSpec;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 import com.abocalypse.constructionflower.truetyper.FontHelper;
 import com.abocalypse.constructionflower.util.ArrayCycler;
@@ -57,8 +62,8 @@ public class GuiManagePlans extends GuiScreen {
 	private GuiTextField xAnchorRelativeToField;
 	private GuiTextField zAnchorRelativeToField;
 
-	private EnumCycler<PlanPartSpec.Orientation> orientation;
-	private EnumCycler<WorldPlanRegistry.AnchorMode> anchorMode;
+	private EnumCycler<EnumOrientation> orientation;
+	private EnumCycler<EnumAnchorMode> anchorMode;
 	private ArrayCycler<String> planNameCycler;
 
     private static enum ButtonID {
@@ -140,7 +145,7 @@ public class GuiManagePlans extends GuiScreen {
 		addHeadersAbove(new HeaderID[]{HeaderID.AT_Z}, x, y);
 		
 		x += smallTextFieldWidth + GuiConstants.HORIZONTAL_GUTTER;
-		this.anchorMode = new EnumCycler<WorldPlanRegistry.AnchorMode>(WorldPlanRegistry.AnchorMode.class);
+		this.anchorMode = new EnumCycler<EnumAnchorMode>(EnumAnchorMode.class);
 		buttons.put(ButtonID.ANCHOR_MODE, new GuiButton(ButtonID.ANCHOR_MODE.ordinal(), x, y, GuiConstants.BUTTON_WIDTH, GuiConstants.BUTTON_HEIGHT, ""));
 		buttonList.add(buttons.get(ButtonID.ANCHOR_MODE));
 		buttons.get(ButtonID.ANCHOR_MODE).enabled = false;
@@ -152,7 +157,7 @@ public class GuiManagePlans extends GuiScreen {
 		addHeadersAbove(new HeaderID[]{HeaderID.PLAN_NAME}, x, y);
 		
 		x += textFieldWidth + GuiConstants.HORIZONTAL_GUTTER;
-		this.orientation = new EnumCycler<PlanPartSpec.Orientation>(PlanPartSpec.Orientation.class);
+		this.orientation = new EnumCycler<EnumOrientation>(EnumOrientation.class);
 		buttons.put(ButtonID.ORIENTATION, new GuiButton(ButtonID.ORIENTATION.ordinal(), x, y, 2*GuiConstants.BUTTON_WIDTH - textFieldWidth, GuiConstants.BUTTON_HEIGHT, ""));
 		buttonList.add(buttons.get(ButtonID.ORIENTATION));
 		buttons.get(ButtonID.ORIENTATION).enabled = false;
@@ -264,7 +269,7 @@ public class GuiManagePlans extends GuiScreen {
 
 	protected void setButtonTexts() {
 		buttons.get(ButtonID.ANCHOR_MODE).displayString = GuiConstants.ANCHOR_MODE_TEXT.get(anchorMode.value());
-		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN ) {
+		if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_PLAN ) {
 			buttons.get(ButtonID.RELATIVE_TO_PLAN).displayString = planNameCycler.value();
 		}
 		buttons.get(ButtonID.ORIENTATION).displayString = GuiConstants.ORIENTATION_TEXT.get(orientation.value());
@@ -312,7 +317,7 @@ public class GuiManagePlans extends GuiScreen {
 			break;
 		case RELATIVE_TO_COORDS :
 			anchorRelativeTo = anchorRelativeToFromFields();
-			savedInfo.get(nameSelected).position.anchorMode = WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS;
+			savedInfo.get(nameSelected).position.anchorMode = EnumAnchorMode.RELATIVE_TO_COORDS;
 			savedInfo.get(nameSelected).position.anchorRelativeToCoords = anchorRelativeTo;
 			break;
 			default :
@@ -320,7 +325,7 @@ public class GuiManagePlans extends GuiScreen {
 		}
 		anchor.add(anchorRelativeTo);
 		
-		WorldPlanRegistry.AnchorMode anchorModeToStore = ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_POSITION ) ? WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS : anchorMode.value();
+		EnumAnchorMode anchorModeToStore = ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_POSITION ) ? EnumAnchorMode.RELATIVE_TO_COORDS : anchorMode.value();
 				
 		WorldPlanRegistry.PlanPosition position = new WorldPlanRegistry.PlanPosition(anchor, anchorModeToStore, anchorRelativeTo, planRelativeTo, orientation.value());
 
@@ -359,19 +364,19 @@ public class GuiManagePlans extends GuiScreen {
 		this.orientation.advanceTo(position.orientation);
 
 		boolean staleAnchor = false;
-		if ( position.anchorMode == WorldPlanRegistry.AnchorMode.RELATIVE_TO_SPAWN ) {
+		if ( position.anchorMode == EnumAnchorMode.RELATIVE_TO_SPAWN ) {
 			ChunkCoordinates spawnPoint = this.mc.thePlayer.worldObj.getSpawnPoint();
 			BlockXZCoords spawnBlockXZCoords = new BlockXZCoords(spawnPoint);
 			staleAnchor =  !position.anchorRelativeToCoords.equals(spawnBlockXZCoords);
-		} else if ( position.anchorMode == WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN ) {
+		} else if ( position.anchorMode == EnumAnchorMode.RELATIVE_TO_PLAN ) {
 			staleAnchor = !this.plans.containsKey(position.anchorRelativeToPlan) || (this.plans.get(position.anchorRelativeToPlan).position.anchor != position.anchor);
 		}
 		if ( staleAnchor ) {
-			this.anchorMode.advanceTo(WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS);
+			this.anchorMode.advanceTo(EnumAnchorMode.RELATIVE_TO_COORDS);
 		} else {
 			this.anchorMode.advanceTo(position.anchorMode);
 		}
-		if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+		if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 			this.xAnchorRelativeToField.setText(Integer.toString(position.anchorRelativeToCoords.x));
 			this.zAnchorRelativeToField.setText(Integer.toString(position.anchorRelativeToCoords.z));
 		}
@@ -417,15 +422,15 @@ public class GuiManagePlans extends GuiScreen {
 				
 			case ANCHOR_MODE :
 				
-				if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+				if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 					BlockXZCoords anchorRelativeTo = anchorRelativeToFromFields();
-					savedInfo.get(nameSelected).position.anchorMode = WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS;
+					savedInfo.get(nameSelected).position.anchorMode = EnumAnchorMode.RELATIVE_TO_COORDS;
 					savedInfo.get(nameSelected).position.anchorRelativeToCoords = anchorRelativeTo;
 				}
 				anchorMode.advance();
 				setButtonTexts();
-				if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
-					if ( savedInfo.get(nameSelected).position.anchorMode == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+				if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
+					if ( savedInfo.get(nameSelected).position.anchorMode == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 						plans.get(nameSelected).position.anchorRelativeToCoords = savedInfo.get(nameSelected).position.anchorRelativeToCoords;
 					}
 					xAnchorRelativeToField.setText(Integer.toString(plans.get(nameSelected).position.anchorRelativeToCoords.x));
@@ -482,11 +487,11 @@ public class GuiManagePlans extends GuiScreen {
 			this.xAnchorField.drawTextBox();
 			this.zAnchorField.drawTextBox();
 			this.planNameField.drawTextBox();
-			if ( this.anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+			if ( this.anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 				this.xAnchorRelativeToField.drawTextBox();
 				this.zAnchorRelativeToField.drawTextBox();
 			}
-			if ( anchorMode.value() != WorldPlanRegistry.AnchorMode.RELATIVE_TO_PLAN ) {
+			if ( anchorMode.value() != EnumAnchorMode.RELATIVE_TO_PLAN ) {
 				buttons.get(ButtonID.RELATIVE_TO_PLAN).enabled = false;
 				buttons.get(ButtonID.RELATIVE_TO_PLAN).visible = false;
 			} else {
@@ -512,7 +517,7 @@ public class GuiManagePlans extends GuiScreen {
 			xAnchorField.updateCursorCounter();
 			zAnchorField.updateCursorCounter();
 			planNameField.updateCursorCounter();
-			if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+			if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 				xAnchorRelativeToField.updateCursorCounter();
 				zAnchorRelativeToField.updateCursorCounter();
 			}
@@ -545,7 +550,7 @@ public class GuiManagePlans extends GuiScreen {
 			xAnchorField.mouseClicked(x, y, buttonClicked);
 			zAnchorField.mouseClicked(x, y, buttonClicked);
 			planNameField.mouseClicked(x, y, buttonClicked);
-			if ( anchorMode.value() == WorldPlanRegistry.AnchorMode.RELATIVE_TO_COORDS ) {
+			if ( anchorMode.value() == EnumAnchorMode.RELATIVE_TO_COORDS ) {
 				xAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
 				zAnchorRelativeToField.mouseClicked(x, y, buttonClicked);
 			}

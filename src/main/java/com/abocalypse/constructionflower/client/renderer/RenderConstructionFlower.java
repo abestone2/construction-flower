@@ -78,7 +78,7 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		tessellator.setColorOpaque_F(redLeafColorMultiplier, greenLeafColorMultiplier, blueLeafColorMultiplier);
 
 		// crossed squares
-		IIcon stemIcon = ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PART.STEM);
+		IIcon stemIcon = ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PlantPart.STEM);
 		double stemMinU = (double)stemIcon.getMinU();
 		double stemMaxU = (double)stemIcon.getMaxU();
 		double stemMinV = (double)stemIcon.getMinV();
@@ -109,7 +109,7 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		tessellator.addVertexWithUV(xWest, yTop, zSouth, stemMinU, stemMinV);
 		
 		// sepals
-		IIcon sepalIcon = ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PART.SEPAL);
+		IIcon sepalIcon = ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PlantPart.SEPAL);
 		double sepalMinU = (double)sepalIcon.getMinU();
 		double sepalMaxU = (double)sepalIcon.getInterpolatedU(2.0F);
 		double sepalMinV = (double)sepalIcon.getMinV();
@@ -167,7 +167,7 @@ public class RenderConstructionFlower implements ISimpleBlockRenderingHandler{
 		// The sign should not be grass colored
 		tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
 		
-		IIcon flowerIcon =  ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PART.FLOWER);
+		IIcon flowerIcon =  ((BlockConstructionFlower) block).getWorldIcon(BlockConstructionFlower.PlantPart.FLOWER);
 		double flowerMinU = (double)flowerIcon.getMinU();
 		double flowerMaxU = (double)flowerIcon.getMaxU();
 		double flowerMinV = (double)flowerIcon.getMinV();

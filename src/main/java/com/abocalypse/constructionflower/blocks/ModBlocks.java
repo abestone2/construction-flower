@@ -9,6 +9,7 @@ public final class ModBlocks {
 	
 	public static void preInit() {
 		
+		// GameRegistry get a single instance of every block.
 		constructionFlower = new BlockConstructionFlower();
 		GameRegistry.registerBlock(constructionFlower, "constructionFlower");
 		

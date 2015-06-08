@@ -5,37 +5,34 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.abocalypse.constructionflower.lib.EnumOrientation;
 import com.abocalypse.constructionflower.util.EnumCycler;
 
 import net.minecraft.world.ChunkCoordIntPair;
 
 public abstract class PlanPartSpec {
 	
-	public static enum Orientation {
-		TOPNORTH, TOPEAST, TOPSOUTH, TOPWEST
-	}
-	
-	private static final EnumCycler<Orientation> rotator = new EnumCycler<Orientation>(Orientation.class);
+	private static final EnumCycler<EnumOrientation> rotator = new EnumCycler<EnumOrientation>(EnumOrientation.class);
 	
 	private int deltaXAnchor;
 	private int deltaZAnchor;
-	private Orientation orientation;
+	private EnumOrientation orientation;
 	private int xShift;
 	private int zShift;
-	protected Orientation rotatedOrientation;
+	protected EnumOrientation rotatedOrientation;
 	
 	public PlanPartSpec(Map<String, Object>properties) {
 		
 		this.deltaXAnchor = new Integer(((Long)(properties.getOrDefault("x anchor", 0L))).intValue());
 		this.deltaZAnchor = new Integer(((Long)(properties.getOrDefault("z anchor", 0L))).intValue());
-		this.orientation = Orientation.valueOf((String)(properties.getOrDefault("orientation", "TOPNORTH")));
+		this.orientation = EnumOrientation.valueOf((String)(properties.getOrDefault("orientation", "TOPNORTH")));
 
 	}
 	
 	@SuppressWarnings("incomplete-switch")
-	private void rotateOrientation(Orientation orientation) {
+	private void rotateOrientation(EnumOrientation orientation) {
 		
-		if ( this.orientation == Orientation.TOPNORTH ) {
+		if ( this.orientation == EnumOrientation.TOPNORTH ) {
 			this.rotatedOrientation = orientation;
 		} else {
 			rotator.advanceTo(orientation);
@@ -49,7 +46,7 @@ public abstract class PlanPartSpec {
 		
 	}
 	
-	private void anchorAt(int x, int z, Orientation orientation) {
+	private void anchorAt(int x, int z, EnumOrientation orientation) {
 		
 		rotateOrientation(orientation);
 		
@@ -355,7 +352,7 @@ public abstract class PlanPartSpec {
 	}
 
 	
-	public void load(int worldX, int worldZ, Orientation orientation, ChunkPlanBlocks chunkPlanBlocks) {
+	public void load(int worldX, int worldZ, EnumOrientation orientation, ChunkPlanBlocks chunkPlanBlocks) {
 		anchorAt(worldX, worldZ, orientation);
 		try {
 			doLoad(worldX, worldZ, chunkPlanBlocks);

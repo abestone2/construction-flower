@@ -20,12 +20,18 @@ public class ClientProxy extends CommonProxy {
     public void preInit() {
 		ConstructionFlower.constructionFlowerRenderId = RenderingRegistry.getNextAvailableRenderId();
         RenderingRegistry.registerBlockHandler(ConstructionFlower.constructionFlowerRenderId, new RenderConstructionFlower());
+        // register listeners for events that include client classes
+        // currently just the one for GuiOpenEvent
     	MinecraftForge.EVENT_BUS.register(new ClientEventListener());
+    	// this actually could be done on the server without a crash,
+    	// but to no purpose
     	GuiHeaderFont.init();
     }
 	
 	@Override
 	public void init() {
+		// because these classes include GuiScreen, they can't be
+		// registered on the server
     	ConstructionFlower.instance.network.registerMessage(LoadedPlansMessage.ClientHandler.class, LoadedPlansMessage.class, 6, Side.CLIENT);
 		ConstructionFlower.instance.network.registerMessage(OpenGuiLoadPlanMessage.Handler.class, OpenGuiLoadPlanMessage.class, 4, Side.CLIENT);
     	ConstructionFlower.instance.network.registerMessage(SpawnedOntoBlocksMessage.Handler.class, SpawnedOntoBlocksMessage.class, 7, Side.CLIENT);
