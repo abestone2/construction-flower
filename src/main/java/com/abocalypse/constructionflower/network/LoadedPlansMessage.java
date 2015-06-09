@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 
-import com.abocalypse.constructionflower.client.gui.GuiManagePlans;
+import com.abocalypse.constructionflower.ConstructionFlower;
 import com.abocalypse.constructionflower.plan.WorldPlanRegistry;
 
 import io.netty.buffer.ByteBuf;
@@ -21,8 +20,6 @@ import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class LoadedPlansMessage implements IMessage {
 	
@@ -72,13 +69,11 @@ public class LoadedPlansMessage implements IMessage {
 		ByteBufUtils.writeTag(buf, payload);
 	}
 	
-	@SideOnly(Side.CLIENT)
 	public static class ClientHandler implements IMessageHandler<LoadedPlansMessage, IMessage> {
 
 		@Override
 		public IMessage onMessage(LoadedPlansMessage message, MessageContext ctx) {
-			Minecraft mc = Minecraft.getMinecraft();
-			mc.displayGuiScreen(new GuiManagePlans(null, message.loadedPlans));
+			ConstructionFlower.proxy.clientOnMessageForLoadedPlansMessage(message.loadedPlans);
 			return null;
 		}
 		

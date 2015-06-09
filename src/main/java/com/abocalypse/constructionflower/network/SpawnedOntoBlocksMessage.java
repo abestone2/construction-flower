@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.abocalypse.constructionflower.blocks.ModBlocks;
+import com.abocalypse.constructionflower.ConstructionFlower;
 import com.abocalypse.constructionflower.lib.ConfigHandler;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChunkCoordinates;
@@ -60,14 +59,11 @@ public class SpawnedOntoBlocksMessage implements IMessage {
 		ByteBufUtils.writeTag(buf, payload);
 	}
 	
-	@SideOnly(Side.CLIENT)
 	public static class Handler implements IMessageHandler<SpawnedOntoBlocksMessage, IMessage> {
 
 		@Override
 		public IMessage onMessage(SpawnedOntoBlocksMessage message, MessageContext ctx) {
-			for ( ChunkCoordinates block : message.spawnedOnto) {
-				Minecraft.getMinecraft().theWorld.setBlock(block.posX, block.posY, block.posZ, ModBlocks.constructionFlower);
-			}
+			ConstructionFlower.proxy.onMessageForSpawnedOntoBlocksMessage(message.spawnedOnto);
 			return null;
 		}
 		

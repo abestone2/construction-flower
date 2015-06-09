@@ -5,12 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 
-import com.abocalypse.constructionflower.client.gui.GuiLoadPlan;
+import com.abocalypse.constructionflower.ConstructionFlower;
 import com.abocalypse.constructionflower.plan.BlockXZCoords;
 
 import io.netty.buffer.ByteBuf;
@@ -85,9 +84,8 @@ public class OpenGuiLoadPlanMessage implements IMessage {
 
 		@Override
 		public IMessage onMessage(OpenGuiLoadPlanMessage message, MessageContext ctx) {
-				Minecraft mc = Minecraft.getMinecraft();
-				mc.displayGuiScreen(new GuiLoadPlan(null, false, message.planSpecFiles, message.existingPlans));
-				return null;
+			ConstructionFlower.proxy.onMessageForOpenGuiLoadPlanMessage(message.planSpecFiles, message.existingPlans);
+			return null;
 		}
 		
 	}
